@@ -134,7 +134,7 @@ This function uses `geiser-racket-init-file' if it exists."
   (let ((out (geiser-eval--retort-output
               (geiser-racket--get-help id module))))
     (when (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
-      (geiser-racket--get-help symbol (match-string 1 out))))
+      (geiser-racket--get-help id (match-string 1 out))))
   (minibuffer-message "%s done" (current-message))
   t)
 
