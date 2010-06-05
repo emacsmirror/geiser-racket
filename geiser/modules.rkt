@@ -90,8 +90,9 @@
   (let ((ext (filename-extension path)))
     (and ext
          (or (bytes=? ext #"rkt") (bytes=? ext #"ss"))
-         (let ((path (path->string path)))
-           (substring path 0 (- (string-length path) 3))))))
+         (let* ((path (path->string path))
+                (len (- (string-length path) (bytes-length ext) 1)))
+           (substring path 0 len)))))
 
 (define (visit-module-path path kind acc)
   (case kind
