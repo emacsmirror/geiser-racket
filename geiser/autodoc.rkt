@@ -98,10 +98,10 @@
       (`(define-syntax-rule (,name . ,formals) . ,_)
        (add-signature! name formals store))
       (`(define-syntax ,name (syntax-rules ,specials . ,clauses))
-       (for-each (lambda (c) (add-signature! name (cdar c) store))
+       (for-each (lambda (c) (add-syntax-signature! name (cdar c) store))
                  (reverse clauses)))
       (`(define-syntax ,name (lambda ,_ (syntax-case ,_ . ,clauses)))
-       (for-each (lambda (c) (add-signature! name (cdar c) store))
+       (for-each (lambda (c) (add-syntax-signature! name (cdar c) store))
                  (reverse clauses)))
       (_ void))))
 
@@ -110,6 +110,13 @@
     (hash-set! store
                name
                (cons (parse-formals formals)
+                     (hash-ref store name '())))))
+
+(define (add-syntax-signature! name formals store)
+  (when (symbol? name)
+    (hash-set! store
+               name
+               (cons (make-signature formals '() '() #f)
                      (hash-ref store name '())))))
 
 (define (parse-formals formals)

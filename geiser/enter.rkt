@@ -64,7 +64,8 @@
                              (get-timestamp path)
                              (if code
                                  (apply append
-                                        (map cdr (module-compiled-imports code)))
+                                        (map cdr
+                                             (module-compiled-imports code)))
                                  null))])
           (hash-set! loaded path mod))
         ;; Evaluate the module:
