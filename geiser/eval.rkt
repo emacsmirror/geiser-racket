@@ -30,9 +30,28 @@
 (define (exn-key e)
   (vector-ref (struct->vector e) 0))
 
+(define current-marks (make-parameter (current-continuation-marks)))
+
+(define (get-real-context e)
+  (let ((ec (continuation-mark-set->context (exn-continuation-marks e)))
+        (cc (continuation-mark-set->context (current-marks))))
+    (filter-not (lambda (c) (member c cc)) ec)))
+
+(define (display-exn-context c)
+  (define (maybe-display p x) (when x (display p) (display x)) x)
+  (when (and (pair? c) (cdr c))
+    (let ((sloc (cdr c)))
+      (and (maybe-display "" (srcloc-source sloc))
+           (maybe-display ":" (srcloc-line sloc))
+           (maybe-display ":" (srcloc-column sloc)))
+      (maybe-display ": " (car c))
+      (newline))))
+
 (define (set-last-error e)
   (set! last-result `((error (key . ,(exn-key e)))))
-  (display (exn-message e)))
+  (display (exn-message e))
+  (newline) (newline)
+  (for-each display-exn-context (get-real-context e)))
 
 (define (write-value v)
   (with-output-to-string
@@ -46,8 +65,9 @@
   (let ((output
          (with-output-to-string
            (lambda ()
-             (with-handlers ((exn? set-last-error))
-               (call-with-values thunk set-last-result))))))
+             (parameterize ((current-marks (current-continuation-marks)))
+               (with-handlers ((exn? set-last-error))
+                 (call-with-values thunk set-last-result)))))))
     (append last-result `((output . ,output)))))
 
 (define (eval-in form spec lang)
