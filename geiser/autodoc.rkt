@@ -130,13 +130,12 @@
                                        req
                                        (cons (car formals) opt)
                                        keys))
-          ((keyword? (car formals)) (let* ((kname
-                                            (keyword->symbol (car formals)))
+          ((keyword? (car formals)) (let* ((kname (car formals))
                                            (arg-id (cadr formals))
                                            (name (if (pair? arg-id)
                                                      (list kname
                                                            (cadr arg-id))
-                                                     kname)))
+                                                     (list kname))))
                                       (loop (cddr formals)
                                             req
                                             opt
