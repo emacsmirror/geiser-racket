@@ -50,7 +50,7 @@
 
 (define signatures (make-hash))
 
-(define-struct signature (required optional keys rest))
+(struct signature (required optional keys rest))
 
 (define (find-signatures path name local-name)
   (let ((path (if (path? path) (path->string path) path)))
@@ -91,6 +91,11 @@
       (`(define ,name (case-lambda ,clauses ...))
        (for-each (lambda (c) (add-signature! name (car c) store))
                  (reverse clauses)))
+      (`(,(or 'struct 'define-struct) ,name ,(? symbol? _)
+         ,(list formals ...) . ,_)
+       (add-signature! name formals store))
+      (`(,(or 'struct 'define-struct) ,name ,(list formals ...) . ,_)
+       (add-signature! name formals store))
       (`(define-for-syntax (,name . ,formals) . ,_)
        (add-signature! name formals store))
       (`(define-for-syntax ,name (lambda ,formals . ,_))
@@ -116,16 +121,15 @@
   (when (symbol? name)
     (hash-set! store
                name
-               (cons (make-signature formals '() '() #f)
+               (cons (signature formals '() '() #f)
                      (hash-ref store name '())))))
 
 (define (parse-formals formals)
   (let loop ((formals formals) (req '()) (opt '()) (keys '()))
     (cond ((null? formals)
-           (make-signature (reverse req) (reverse opt) (reverse keys) #f))
+           (signature (reverse req) (reverse opt) (reverse keys) #f))
           ((symbol? formals)
-           (make-signature (reverse req) (reverse opt)
-                           (reverse keys) formals))
+           (signature (reverse req) (reverse opt) (reverse keys) formals))
           ((pair? (car formals)) (loop (cdr formals)
                                        req
                                        (cons (car formals) opt)
@@ -145,7 +149,7 @@
 (define (infer-signatures name)
   (define syntax-tag (cons 1 0))
   (define error-tag (cons 1 1))
-  (define generic-signature (make-signature '(...) '() '() #f))
+  (define generic-signature (signature '(...) '() '() #f))
   (let ((value (with-handlers ((exn:fail:syntax? (lambda (_) syntax-tag))
                                (exn:fail:contract:variable? (lambda (_)
                                                               error-tag)))
@@ -164,10 +168,9 @@
            (build-list count (lambda (n) (+ n fst))))))
   (define (arity->signature arity)
     (cond ((number? arity)
-           (make-signature (args 0 arity) '() '() #f))
+           (signature (args 0 arity) '() '() #f))
           ((arity-at-least? arity)
-           (make-signature (args 0 (arity-at-least-value arity))
-                           '() '() 'rest))))
+           (signature (args 0 (arity-at-least-value arity)) '() '() 'rest))))
   (define (conseq? lst)
     (cond ((< (length lst) 2) (number? (car lst)))
           ((and (number? (car lst))
@@ -178,7 +181,7 @@
   (cond ((and (list? arity) (conseq? arity))
          (let ((mi (apply min arity))
                (ma (apply max arity)))
-           (list (make-signature (args 0 mi) (args mi (- ma mi)) '() #f))))
+           (list (signature (args 0 mi) (args mi (- ma mi)) '() #f))))
         ((list? arity) (map arity->signature arity))
         (else (list (arity->signature arity)))))
 
@@ -188,7 +191,7 @@
                  (and (list? (car form))
                       (not (null? (car form)))
                       (memq (caar form)
-                            '(define-syntax-rule
+                            '(define-syntax-rule struct
                                define-syntax define set! define-struct)))))
     (hash-remove! signatures path)))
 

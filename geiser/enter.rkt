@@ -16,7 +16,7 @@
 
 (provide get-namespace enter-module module-loader module-loaded?)
 
-(define-struct mod (name timestamp depends))
+(struct mod (name timestamp depends))
 
 (define loaded (make-hash))
 
@@ -60,14 +60,14 @@
                                          (or (current-load-relative-directory)
                                              (current-directory)))))])
         ;; Record module timestamp and dependencies:
-        (let ([mod (make-mod name
-                             (get-timestamp path)
-                             (if code
-                                 (apply append
-                                        (map cdr
-                                             (module-compiled-imports code)))
-                                 null))])
-          (hash-set! loaded path mod))
+        (let ([m (mod name
+                      (get-timestamp path)
+                      (if code
+                          (apply append
+                                 (map cdr
+                                      (module-compiled-imports code)))
+                          null))])
+          (hash-set! loaded path m))
         ;; Evaluate the module:
         (eval code))
       ;; Not a module:
