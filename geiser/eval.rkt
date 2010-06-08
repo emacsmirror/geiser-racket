@@ -33,14 +33,14 @@
 (define current-marks (make-parameter (current-continuation-marks)))
 
 (define (get-real-context e)
-  (let ((ec (continuation-mark-set->context (exn-continuation-marks e)))
-        (cc (continuation-mark-set->context (current-marks))))
+  (let ([ec (continuation-mark-set->context (exn-continuation-marks e))]
+        [cc (continuation-mark-set->context (current-marks))])
     (filter-not (lambda (c) (member c cc)) ec)))
 
 (define (display-exn-context c)
   (define (maybe-display p x) (when x (display p) (display x)) x)
   (when (and (pair? c) (cdr c))
-    (let ((sloc (cdr c)))
+    (let ([sloc (cdr c)])
       (and (maybe-display "" (srcloc-source sloc))
            (maybe-display ":" (srcloc-line sloc))
            (maybe-display ":" (srcloc-column sloc)))
@@ -62,12 +62,12 @@
 
 (define (call-with-result thunk)
   (set-last-result (void))
-  (let ((output
+  (let ([output
          (with-output-to-string
            (lambda ()
-             (parameterize ((current-marks (current-continuation-marks)))
-               (with-handlers ((exn? set-last-error))
-                 (call-with-values thunk set-last-result)))))))
+             (parameterize ([current-marks (current-continuation-marks)])
+               (with-handlers ([exn? set-last-error])
+                 (call-with-values thunk set-last-result)))))])
     (append last-result `((output . ,output)))))
 
 (define (eval-in form spec lang)
@@ -87,7 +87,7 @@
 (define compile-file load-file)
 
 (define (macroexpand form . all)
-  (let ((all (and (not (null? all)) (car all))))
+  (let ([all (and (not (null? all)) (car all))])
     (with-output-to-string
       (lambda ()
         (pretty-print (syntax->datum ((if all expand expand-once) form)))))))

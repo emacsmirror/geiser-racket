@@ -16,10 +16,10 @@
          symbol->keyword)
 
 (define (pair->list pair)
-  (let loop ((d pair) (s '()))
-    (cond ((null? d) (reverse s))
-          ((symbol? d) (reverse (cons d s)))
-          (else (loop (cdr d) (cons (car d) s))))))
+  (let loop ([d pair] [s '()])
+    (cond [(null? d) (reverse s)]
+          [(symbol? d) (reverse (cons d s))]
+          [else (loop (cdr d) (cons (car d) s))])))
 
 (define keyword->symbol (compose string->symbol keyword->string))
 (define (symbol->keyword sym) (string->keyword (format "~a" sym)))

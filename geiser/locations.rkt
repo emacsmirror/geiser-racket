@@ -20,8 +20,8 @@
 (require geiser/utils geiser/modules)
 
 (define (symbol-location* sym)
-  (let* ((id (namespace-symbol->identifier sym))
-         (binding (and id (identifier-binding id))))
+  (let* ([id (namespace-symbol->identifier sym)]
+         [binding (and id (identifier-binding id))])
     (if (list? binding)
         (cons
          (cadr binding)
@@ -35,9 +35,9 @@
         (cons 'line (or line '()))))
 
 (define (symbol-location sym)
-  (let* ((loc (symbol-location* sym))
-         (name (car loc))
-         (path (cdr loc)))
+  (let* ([loc (symbol-location* sym)]
+         [name (car loc)]
+         [path (cdr loc)])
     (if path
         (make-location name path #f)
         (module-location sym))))

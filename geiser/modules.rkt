@@ -23,43 +23,43 @@
 (require srfi/13 syntax/modresolve syntax/modcode geiser/enter)
 
 (define (ensure-module-spec spec)
-  (cond ((symbol? spec) spec)
-        ((not (string? spec)) #f)
-        (else `(file ,spec))))
+  (cond [(symbol? spec) spec]
+        [(not (string? spec)) #f]
+        [else `(file ,spec)]))
 
 (define (module-spec->namespace spec (lang #f))
-  (let ((spec (ensure-module-spec spec))
-        (try-lang (lambda (_)
-                    (with-handlers ((exn? (const (current-namespace))))
+  (let ([spec (ensure-module-spec spec)]
+        [try-lang (lambda (_)
+                    (with-handlers ([exn? (const (current-namespace))])
                       (and lang
                            (begin
                              (load-module lang #f (current-namespace))
-                             (module->namespace lang)))))))
+                             (module->namespace lang)))))])
     (or (and spec
-             (with-handlers ((exn? try-lang)) (get-namespace spec)))
+             (with-handlers ([exn? try-lang]) (get-namespace spec)))
         (current-namespace))))
 
 (define nowhere (open-output-nowhere))
 
 (define (load-module spec (port #f) (ns #f))
-  (parameterize ((current-error-port (or port nowhere)))
+  (parameterize ([current-error-port (or port nowhere)])
     (enter-module (ensure-module-spec spec))
     (when (namespace? ns)
       (current-namespace ns))))
 
 (define (namespace->module-path-name ns)
-  (let ((rmp (variable-reference->resolved-module-path
-              (eval '(#%variable-reference) ns))))
+  (let ([rmp (variable-reference->resolved-module-path
+              (eval '(#%variable-reference) ns))])
     (and (resolved-module-path? rmp)
          (resolved-module-path-name rmp))))
 
 (define (module-spec->path-name spec)
-  (with-handlers ((exn? (lambda (_) #f)))
-    (let ((ns (module-spec->namespace (ensure-module-spec spec))))
+  (with-handlers ([exn? (lambda (_) #f)])
+    (let ([ns (module-spec->namespace (ensure-module-spec spec))])
       (namespace->module-path-name ns))))
 
 (define (module-path-name->name path)
-  (cond ((path? path)
+  (cond [(path? path)
          (let* ((path (path->string path))
                 (cpaths (map (compose path->string path->directory-path)
                              (current-library-collection-paths)))
@@ -73,11 +73,11 @@
            (if (absolute-path? real-path)
                (call-with-values (lambda () (split-path path))
                  (lambda (_ basename __) (path->string basename)))
-               (regexp-replace "\\.[^./]*$" real-path ""))))
-        ((eq? path '#%kernel) "(kernel)")
-        ((string? path) path)
-        ((symbol? path) (symbol->string path))
-        (else "")))
+               (regexp-replace "\\.[^./]*$" real-path "")))]
+        [(eq? path '#%kernel) "(kernel)"]
+        [(string? path) path]
+        [(symbol? path) (symbol->string path)]
+        [else ""]))
 
 (define (skippable-dir? path)
   (call-with-values (lambda () (split-path path))
@@ -87,27 +87,27 @@
 (define path->symbol (compose string->symbol path->string))
 
 (define (path->entry path)
-  (let ((ext (filename-extension path)))
+  (let ([ext (filename-extension path)])
     (and ext
          (or (bytes=? ext #"rkt") (bytes=? ext #"ss"))
-         (let* ((path (path->string path))
-                (len (- (string-length path) (bytes-length ext) 1)))
+         (let* ([path (path->string path)]
+                [len (- (string-length path) (bytes-length ext) 1)])
            (substring path 0 len)))))
 
 (define (visit-module-path path kind acc)
   (case kind
-    ((file) (let ((entry (path->entry path)))
-              (if entry (cons entry acc) acc)))
-    ((dir) (cond ((skippable-dir? path) (values acc #f))
+    [(file) (let ((entry (path->entry path)))
+              (if entry (cons entry acc) acc))]
+    [(dir) (cond ((skippable-dir? path) (values acc #f))
                  ((or (file-exists? (build-path path "main.rkt"))
                       (file-exists? (build-path path "main.ss")))
                   (cons (path->string path) acc))
-                 (else acc)))
-    (else acc)))
+                 (else acc))]
+    [else acc]))
 
 (define (find-modules path acc)
   (if (directory-exists? path)
-      (parameterize ((current-directory path))
+      (parameterize ([current-directory path])
         (fold-files visit-module-path acc))
       acc))
 
@@ -128,13 +128,13 @@
                   (map car (cdr idls)))
                 ls))
   (define (classify-ids ids ns)
-    (let loop ((ids ids) (procs '()) (vars '()))
-      (cond ((null? ids)
-             `((procs ,@(reverse procs)) (vars ,@(reverse vars))))
-            ((procedure?
+    (let loop ([ids ids] [procs '()] [vars '()])
+      (cond [(null? ids)
+             `((procs ,@(reverse procs)) (vars ,@(reverse vars)))]
+            [(procedure?
               (namespace-variable-value (car ids) #t (const #f) ns))
-             (loop (cdr ids) (cons (car ids) procs) vars))
-            (else (loop (cdr ids) procs (cons (car ids) vars))))))
+             (loop (cdr ids) (cons (car ids) procs) vars)]
+            [else (loop (cdr ids) procs (cons (car ids) vars))])))
   (let-values (((reg syn)
                 (module-compiled-exports
                  (get-module-code (resolve-module-path mod #f)))))

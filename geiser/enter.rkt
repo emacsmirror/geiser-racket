@@ -21,8 +21,8 @@
 (define loaded (make-hash))
 
 (define (module-loaded? path)
-  (with-handlers ((exn? (lambda (_) #f)))
-    (let ((rp (module-path-index-resolve (module-path-index-join path #f))))
+  (with-handlers ([exn? (lambda (_) #f)])
+    (let ([rp (module-path-index-resolve (module-path-index-join path #f))])
       (hash-has-key? loaded (resolved-module-path-name rp)))))
 
 (define (enter-module mod)

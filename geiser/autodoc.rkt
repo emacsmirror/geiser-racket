@@ -16,8 +16,8 @@
 (require geiser/utils geiser/modules geiser/locations scheme/help)
 
 (define (get-help symbol mod)
-  (with-handlers ((exn? (lambda (_)
-                          (eval `(help ,symbol)))))
+  (with-handlers ([exn? (lambda (_)
+                          (eval `(help ,symbol)))])
     (eval `(help ,symbol #:from ,(ensure-module-spec mod)))))
 
 (define (autodoc ids)
@@ -28,11 +28,11 @@
 (define (autodoc* id)
   (and
    (symbol? id)
-   (let* ((loc (symbol-location* id))
-          (name (car loc))
-          (path (cdr loc))
-          (sgns (and path (find-signatures path name id)))
-          (sgns (and sgns (if (list? sgns) sgns '()))))
+   (let* ([loc (symbol-location* id)]
+          [name (car loc)]
+          [path (cdr loc)]
+          [sgns (and path (find-signatures path name id))]
+          [sgns (and sgns (if (list? sgns) sgns '()))])
      (and sgns
           `(,id
             (name . ,name)
@@ -53,7 +53,7 @@
 (struct signature (required optional keys rest))
 
 (define (find-signatures path name local-name)
-  (let ((path (if (path? path) (path->string path) path)))
+  (let ([path (if (path? path) (path->string path) path)])
     (hash-ref! (hash-ref! signatures
                           path
                           (lambda () (parse-signatures path)))
@@ -61,54 +61,54 @@
                (lambda () (infer-signatures local-name)))))
 
 (define (parse-signatures path)
-  (let ((result (make-hasheq)))
-    (with-handlers ((exn? (lambda (e) result)))
+  (let ([result (make-hasheq)])
+    (with-handlers ([exn? (lambda (e) result)])
       (with-input-from-file path
         (lambda ()
-          (parameterize ((read-accept-reader #t))
-            (let loop ((stx (read-syntax path)))
-              (cond ((eof-object? stx) void)
-                    ((syntax->datum stx) =>
+          (parameterize ([read-accept-reader #t])
+            (let loop ([stx (read-syntax path)])
+              (cond [(eof-object? stx) void]
+                    [(syntax->datum stx) =>
                      (lambda (datum)
                        (parse-datum! datum result)
-                       (loop (read-syntax path))))
-                    (else void)))))))
+                       (loop (read-syntax path)))]
+                    [else void]))))))
     result))
 
 (define (parse-datum! datum store)
-  (with-handlers ((exn? (lambda (_) void)))
+  (with-handlers ([exn? (lambda (_) void)])
     (match datum
-      (`(module ,name ,lang (#%module-begin . ,forms))
-       (for-each (lambda (f) (parse-datum! f store)) forms))
-      (`(module ,name ,lang . ,forms)
-       (for-each (lambda (f) (parse-datum! f store)) forms))
-      (`(define ((,name . ,formals) . ,_) . ,_)
-       (add-signature! name formals store))
-      (`(define (,name . ,formals) . ,_)
-       (add-signature! name formals store))
-      (`(define ,name (lambda ,formals . ,_))
-       (add-signature! name formals store))
-      (`(define ,name (case-lambda ,clauses ...))
+      [`(module ,name ,lang (#%module-begin . ,forms))
+       (for-each (lambda (f) (parse-datum! f store)) forms)]
+      [`(module ,name ,lang . ,forms)
+       (for-each (lambda (f) (parse-datum! f store)) forms)]
+      [`(define ((,name . ,formals) . ,_) . ,_)
+       (add-signature! name formals store)]
+      [`(define (,name . ,formals) . ,_)
+       (add-signature! name formals store)]
+      [`(define ,name (lambda ,formals . ,_))
+       (add-signature! name formals store)]
+      [`(define ,name (case-lambda ,clauses ...))
        (for-each (lambda (c) (add-signature! name (car c) store))
-                 (reverse clauses)))
-      (`(,(or 'struct 'define-struct) ,name ,(? symbol? _)
+                 (reverse clauses))]
+      [`(,(or 'struct 'define-struct) ,name ,(? symbol? _)
          ,(list formals ...) . ,_)
-       (add-signature! name formals store))
-      (`(,(or 'struct 'define-struct) ,name ,(list formals ...) . ,_)
-       (add-signature! name formals store))
-      (`(define-for-syntax (,name . ,formals) . ,_)
-       (add-signature! name formals store))
-      (`(define-for-syntax ,name (lambda ,formals . ,_))
-       (add-signature! name formals store))
-      (`(define-syntax-rule (,name . ,formals) . ,_)
-       (add-signature! name formals store))
-      (`(define-syntax ,name (syntax-rules ,specials . ,clauses))
+       (add-signature! name formals store)]
+      [`(,(or 'struct 'define-struct) ,name ,(list formals ...) . ,_)
+       (add-signature! name formals store)]
+      [`(define-for-syntax (,name . ,formals) . ,_)
+       (add-signature! name formals store)]
+      [`(define-for-syntax ,name (lambda ,formals . ,_))
+       (add-signature! name formals store)]
+      [`(define-syntax-rule (,name . ,formals) . ,_)
+       (add-signature! name formals store)]
+      [`(define-syntax ,name (syntax-rules ,specials . ,clauses))
        (for-each (lambda (c) (add-syntax-signature! name (cdar c) store))
-                 (reverse clauses)))
-      (`(define-syntax ,name (lambda ,_ (syntax-case ,_ . ,clauses)))
+                 (reverse clauses))]
+      [`(define-syntax ,name (lambda ,_ (syntax-case ,_ . ,clauses)))
        (for-each (lambda (c) (add-syntax-signature! name (cdar c) store))
-                 (reverse clauses)))
-      (_ void))))
+                 (reverse clauses))]
+      [_ void])))
 
 (define (add-signature! name formals store)
   (when (symbol? name)
@@ -125,16 +125,16 @@
                      (hash-ref store name '())))))
 
 (define (parse-formals formals)
-  (let loop ((formals formals) (req '()) (opt '()) (keys '()))
-    (cond ((null? formals)
-           (signature (reverse req) (reverse opt) (reverse keys) #f))
-          ((symbol? formals)
-           (signature (reverse req) (reverse opt) (reverse keys) formals))
-          ((pair? (car formals)) (loop (cdr formals)
+  (let loop ([formals formals] [req '()] [opt '()] [keys '()])
+    (cond [(null? formals)
+           (signature (reverse req) (reverse opt) (reverse keys) #f)]
+          [(symbol? formals)
+           (signature (reverse req) (reverse opt) (reverse keys) formals)]
+          [(pair? (car formals)) (loop (cdr formals)
                                        req
                                        (cons (car formals) opt)
-                                       keys))
-          ((keyword? (car formals)) (let* ((kname (car formals))
+                                       keys)]
+          [(keyword? (car formals)) (let* ((kname (car formals))
                                            (arg-id (cadr formals))
                                            (name (if (pair? arg-id)
                                                      (list kname
@@ -143,47 +143,47 @@
                                       (loop (cddr formals)
                                             req
                                             opt
-                                            (cons name keys))))
-          (else (loop (cdr formals) (cons (car formals) req) opt keys)))))
+                                            (cons name keys)))]
+          [else (loop (cdr formals) (cons (car formals) req) opt keys)])))
 
 (define (infer-signatures name)
   (define syntax-tag (cons 1 0))
   (define error-tag (cons 1 1))
   (define generic-signature (signature '(...) '() '() #f))
-  (let ((value (with-handlers ((exn:fail:syntax? (lambda (_) syntax-tag))
-                               (exn:fail:contract:variable? (lambda (_)
-                                                              error-tag)))
-                 (namespace-variable-value name))))
-    (cond ((procedure? value) (arity->signatures (procedure-arity value)))
-          ((eq? value syntax-tag) (list generic-signature))
-          ((eq? value error-tag) #f)
-          (else 'variable))))
+  (let ([value (with-handlers ([exn:fail:syntax? (lambda (_) syntax-tag)]
+                               [exn:fail:contract:variable? (lambda (_)
+                                                              error-tag)])
+                 (namespace-variable-value name))])
+    (cond [(procedure? value) (arity->signatures (procedure-arity value))]
+          [(eq? value syntax-tag) (list generic-signature)]
+          [(eq? value error-tag) #f]
+          [else 'variable])))
 
 (define (arity->signatures arity)
   (define (args fst count)
-    (let* ((letts (list->vector '(#\x #\y #\z #\u #\v #\w #\r #\s)))
-           (len (vector-length letts))
-           (lett (lambda (n) (vector-ref letts (modulo n len)))))
+    (let* ([letts (list->vector '(#\x #\y #\z #\u #\v #\w #\r #\s))]
+           [len (vector-length letts)]
+           [lett (lambda (n) (vector-ref letts (modulo n len)))])
       (map (lambda (n) (string->symbol (format "~a" (lett n))))
            (build-list count (lambda (n) (+ n fst))))))
   (define (arity->signature arity)
-    (cond ((number? arity)
-           (signature (args 0 arity) '() '() #f))
-          ((arity-at-least? arity)
-           (signature (args 0 (arity-at-least-value arity)) '() '() 'rest))))
+    (cond [(number? arity)
+           (signature (args 0 arity) '() '() #f)]
+          [(arity-at-least? arity)
+           (signature (args 0 (arity-at-least-value arity)) '() '() 'rest)]))
   (define (conseq? lst)
-    (cond ((< (length lst) 2) (number? (car lst)))
-          ((and (number? (car lst))
+    (cond [(< (length lst) 2) (number? (car lst))]
+          [(and (number? (car lst))
                 (number? (cadr lst))
                 (eqv? (+ 1 (car lst)) (cadr lst)))
-           (conseq? (cdr lst)))
-          (else #f)))
-  (cond ((and (list? arity) (conseq? arity))
+           (conseq? (cdr lst))]
+          [else #f]))
+  (cond [(and (list? arity) (conseq? arity))
          (let ((mi (apply min arity))
                (ma (apply max arity)))
-           (list (signature (args 0 mi) (args mi (- ma mi)) '() #f))))
-        ((list? arity) (map arity->signature arity))
-        (else (list (arity->signature arity)))))
+           (list (signature (args 0 mi) (args mi (- ma mi)) '() #f)))]
+        [(list? arity) (map arity->signature arity)]
+        [else (list (arity->signature arity))]))
 
 (define (update-signature-cache path . form)
   (when (and (string? path)
