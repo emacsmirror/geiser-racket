@@ -27,7 +27,7 @@
         [(not (string? spec)) #f]
         [else `(file ,spec)]))
 
-(define (module-spec->namespace spec (lang #f))
+(define (module-spec->namespace spec (lang #f) (no-current #f))
   (let ([spec (ensure-module-spec spec)]
         [try-lang (lambda (_)
                     (with-handlers ([exn? (const (current-namespace))])
@@ -37,7 +37,7 @@
                              (module->namespace lang)))))])
     (or (and spec
              (with-handlers ([exn? try-lang]) (get-namespace spec)))
-        (current-namespace))))
+        (if no-current #f (current-namespace)))))
 
 (define nowhere (open-output-nowhere))
 
@@ -54,22 +54,24 @@
          (resolved-module-path-name rmp))))
 
 (define (module-spec->path-name spec)
-  (with-handlers ([exn? (lambda (_) #f)])
-    (let ([ns (module-spec->namespace (ensure-module-spec spec))])
-      (namespace->module-path-name ns))))
+  (and (symbol? spec)
+       (or (get-path spec)
+           (register-path spec
+                          (namespace->module-path-name
+                           (module-spec->namespace spec) #f #t)))))
 
 (define (module-path-name->name path)
   (cond [(path? path)
-         (let* ((path (path->string path))
-                (cpaths (map (compose path->string path->directory-path)
-                             (current-library-collection-paths)))
-                (prefix-len (lambda (p)
+         (let* ([path (path->string path)]
+                [cpaths (map (compose path->string path->directory-path)
+                             (current-library-collection-paths))]
+                [prefix-len (lambda (p)
                               (let ((pl (string-length p)))
                                 (if (= pl (string-prefix-length p path))
                                     pl
-                                    0))))
-                (lens (map prefix-len cpaths))
-                (real-path (substring path (apply max lens))))
+                                    0)))]
+                [lens (map prefix-len cpaths)]
+                [real-path (substring path (apply max lens))])
            (if (absolute-path? real-path)
                (call-with-values (lambda () (split-path path))
                  (lambda (_ basename __) (path->string basename)))
@@ -97,7 +99,12 @@
 (define (visit-module-path path kind acc)
   (case kind
     [(file) (let ((entry (path->entry path)))
-              (if entry (cons entry acc) acc))]
+              (if (not entry)
+                  acc
+                  (begin
+                    (register-path (string->symbol entry)
+                                   (build-path (current-directory) path))
+                    (cons entry acc))))]
     [(dir) (cond ((skippable-dir? path) (values acc #f))
                  ((or (file-exists? (build-path path "main.rkt"))
                       (file-exists? (build-path path "main.ss")))
@@ -114,7 +121,16 @@
 (define (known-modules)
   (sort (foldl find-modules '() (current-library-collection-paths)) string<?))
 
+(define registered (make-hash))
+
+(define (get-path mod) (hash-ref registered mod #f))
+
+(define (register-path mod path)
+  (hash-set! registered mod path)
+  path)
+
 (define module-cache #f)
+
 (define (update-module-cache)
   (when (not module-cache) (set! module-cache (known-modules))))
 
