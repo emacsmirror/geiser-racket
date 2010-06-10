@@ -12,11 +12,12 @@
 #lang racket/base
 
 (require syntax/modcode
-         (for-syntax scheme/base))
+         (for-syntax racket/base)
+         racket/path)
 
 (provide get-namespace enter-module module-loader module-loaded?)
 
-(struct mod (name timestamp depends))
+(struct mod (name load-path timestamp depends))
 
 (define loaded (make-hash))
 
@@ -39,8 +40,44 @@
 (define inhibit-eval (make-parameter #f))
 
 (define (get-namespace mod)
-  (parameterize ([inhibit-eval #t])
-    (module->namespace mod)))
+  (let ([mod (cond [(symbol? mod) mod]
+                   [(string? mod) (find-module! (string->path mod) mod)]
+                   [(path? mod) (find-module! mod (path->string mod))]
+                   [else mod])])
+    (and mod
+         (with-handlers ([exn? (lambda (_) #f)])
+           (parameterize ([inhibit-eval #t])
+             (module->namespace mod))))))
+
+(define (find-module! path path-str)
+  (let ([m (or (hash-ref loaded path #f)
+               (let loop ([ps (remove path (resolve-paths path))]
+                          [seen '()])
+                 (cond [(null? ps) #f]
+                       [(hash-ref loaded (car ps) #f) =>
+                        (lambda (m)
+                          (add-paths! m (cdr ps))
+                          (add-paths! m (cons path seen))
+                          m)]
+                       [else (loop (cdr ps) (cons (car ps) seen))])))])
+    (list 'file (or (and m (mod-load-path m)) path-str))))
+
+(define (add-paths! m ps)
+  (for-each (lambda (p) (hash-set! loaded p m)) ps))
+
+(define (resolve-paths path)
+  (define (find root rest)
+    (let* ([alt-root (resolve-path root)]
+           [same? (equal? root alt-root)])
+      (cond [(null? rest) (cons root (if same? '() `(,alt-root)))]
+            [else (let* ([c (car rest)]
+                         [cs (cdr rest)]
+                         [rps (find (build-path root c) cs)])
+                    (if same?
+                        rps
+                        (append rps (find (build-path alt-root c) cs))))])))
+  (let ([cmps (explode-path path)])
+    (find (car cmps) (cdr cmps))))
 
 (define ((enter-load/use-compiled orig re?) path name)
   (when (inhibit-eval)
@@ -61,13 +98,14 @@
                                              (current-directory)))))])
         ;; Record module timestamp and dependencies:
         (let ([m (mod name
+                      (path->string path)
                       (get-timestamp path)
                       (if code
                           (apply append
                                  (map cdr
                                       (module-compiled-imports code)))
                           null))])
-          (hash-set! loaded path m))
+          (add-paths! m (resolve-paths path)))
         ;; Evaluate the module:
         (eval code))
       ;; Not a module:

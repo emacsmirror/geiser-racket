@@ -27,17 +27,15 @@
         [(not (string? spec)) #f]
         [else `(file ,spec)]))
 
-(define (module-spec->namespace spec (lang #f) (no-current #f))
-  (let ([spec (ensure-module-spec spec)]
-        [try-lang (lambda (_)
-                    (with-handlers ([exn? (const (current-namespace))])
-                      (and lang
-                           (begin
-                             (load-module lang #f (current-namespace))
-                             (module->namespace lang)))))])
-    (or (and spec
-             (with-handlers ([exn? try-lang]) (get-namespace spec)))
-        (if no-current #f (current-namespace)))))
+(define (module-spec->namespace spec (lang #f) (current #t))
+  (define (try-lang)
+    (and lang
+         (with-handlers ([exn? (const #f)])
+           (load-module lang #f (current-namespace))
+           (module->namespace lang))))
+  (or (get-namespace spec)
+      (try-lang)
+      (and current (current-namespace))))
 
 (define nowhere (open-output-nowhere))
 
@@ -58,7 +56,7 @@
        (or (get-path spec)
            (register-path spec
                           (namespace->module-path-name
-                           (module-spec->namespace spec) #f #t)))))
+                           (module-spec->namespace spec) #f #f)))))
 
 (define (module-path-name->name path)
   (cond [(path? path)
@@ -92,24 +90,25 @@
   (let ([ext (filename-extension path)])
     (and ext
          (or (bytes=? ext #"rkt") (bytes=? ext #"ss"))
+         (not (bytes=? (bytes-append #"main" ext) (path->bytes path)))
          (let* ([path (path->string path)]
                 [len (- (string-length path) (bytes-length ext) 1)])
            (substring path 0 len)))))
 
 (define (visit-module-path path kind acc)
+  (define (register e p)
+    (register-path (string->symbol e) (build-path (current-directory) p))
+    (cons e acc))
+  (define (find-main ext)
+    (let ([m (build-path path (string-append "main." ext))])
+      (and (file-exists? m) m)))
   (case kind
-    [(file) (let ((entry (path->entry path)))
-              (if (not entry)
-                  acc
-                  (begin
-                    (register-path (string->symbol entry)
-                                   (build-path (current-directory) path))
-                    (cons entry acc))))]
-    [(dir) (cond ((skippable-dir? path) (values acc #f))
-                 ((or (file-exists? (build-path path "main.rkt"))
-                      (file-exists? (build-path path "main.ss")))
-                  (cons (path->string path) acc))
-                 (else acc))]
+    [(file) (let ([entry (path->entry path)])
+              (if (not entry) acc (register entry path)))]
+    [(dir) (cond [(skippable-dir? path) (values acc #f)]
+                 [(or (find-main "rkt") (find-main "ss")) =>
+                  (curry register (path->string path))]
+                 [else acc])]
     [else acc]))
 
 (define (find-modules path acc)
