@@ -160,17 +160,12 @@
           [else 'variable])))
 
 (define (arity->signatures arity)
-  (define (args fst count)
-    (let* ([letts (list->vector '(#\x #\y #\z #\u #\v #\w #\r #\s))]
-           [len (vector-length letts)]
-           [lett (lambda (n) (vector-ref letts (modulo n len)))])
-      (map (lambda (n) (string->symbol (format "~a" (lett n))))
-           (build-list count (lambda (n) (+ n fst))))))
+  (define (args count) (build-list count (const '_)))
   (define (arity->signature arity)
     (cond [(number? arity)
-           (signature (args 0 arity) '() '() #f)]
+           (signature (args arity) '() '() #f)]
           [(arity-at-least? arity)
-           (signature (args 0 (arity-at-least-value arity)) '() '() 'rest)]))
+           (signature (args (arity-at-least-value arity)) '() '() 'rest)]))
   (define (conseq? lst)
     (cond [(< (length lst) 2) (number? (car lst))]
           [(and (number? (car lst))
@@ -181,7 +176,7 @@
   (cond [(and (list? arity) (conseq? arity))
          (let ((mi (apply min arity))
                (ma (apply max arity)))
-           (list (signature (args 0 mi) (args mi (- ma mi)) '() #f)))]
+           (list (signature (args mi) (args (- ma mi)) '() #f)))]
         [(list? arity) (map arity->signature arity)]
         [else (list (arity->signature arity))]))
 
