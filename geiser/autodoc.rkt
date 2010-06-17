@@ -147,17 +147,12 @@
           [else (loop (cdr formals) (cons (car formals) req) opt keys)])))
 
 (define (infer-signatures name)
-  (define syntax-tag (cons 1 0))
-  (define error-tag (cons 1 1))
-  (define generic-signature (signature '(...) '() '() #f))
-  (let ([value (with-handlers ([exn:fail:syntax? (lambda (_) syntax-tag)]
-                               [exn:fail:contract:variable? (lambda (_)
-                                                              error-tag)])
-                 (namespace-variable-value name))])
-    (cond [(procedure? value) (arity->signatures (procedure-arity value))]
-          [(eq? value syntax-tag) (list generic-signature)]
-          [(eq? value error-tag) #f]
-          [else 'variable])))
+  (with-handlers ([exn:fail:syntax? (const `(,(signature '(...) '() '() #f)))]
+                  [exn:fail:contract:variable? (const #f)])
+    (let ([v (namespace-variable-value name)])
+      (if (procedure? v)
+          (arity->signatures (procedure-arity v))
+          'variable))))
 
 (define (arity->signatures arity)
   (define (args count) (build-list count (const '_)))
