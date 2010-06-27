@@ -113,7 +113,15 @@ This function uses `geiser-racket-init-file' if it exists."
   (save-excursion (skip-syntax-backward "^-()>") (point)))
 
 (defun geiser-racket--enter-command (module)
-  (and (stringp module) (format "(enter! (file %S))" module)))
+  (when (stringp module)
+    (cond ((zerop (length module)) "(enter! #f)")
+          ((file-name-absolute-p module) (format "(enter! (file %S))" module))
+          (t (format "(enter! %s)" module)))))
+
+(defun geiser-racket--import-command (module)
+  (and (stringp module)
+       (not (zerop (length module)))
+       (format "(require %s)" module)))
 
 (defconst geiser-racket--binding-forms
   '(for for/list for/hash for/hasheq for/and for/or
@@ -192,6 +200,7 @@ This function uses `geiser-racket-init-file' if it exists."
   (marshall-procedure geiser-racket--geiser-procedure)
   (find-module geiser-racket--get-module)
   (enter-command geiser-racket--enter-command)
+  (import-command geiser-racket--import-command)
   (find-symbol-begin geiser-racket--symbol-begin)
   (display-error geiser-racket--display-error)
   (display-help geiser-racket--external-help)
