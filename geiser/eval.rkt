@@ -18,7 +18,7 @@
          macroexpand
          make-repl-reader)
 
-(require scheme/enter geiser/modules geiser/autodoc)
+(require geiser/enter geiser/modules geiser/autodoc)
 
 (define last-result (void))
 
