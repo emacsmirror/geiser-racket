@@ -161,7 +161,8 @@ This function uses `geiser-racket-init-file' if it exists."
                               (match-end 1)
                               (match-string 1)
                               (match-string 2)
-                              (match-string 3)))))
+                              (match-string 3)
+                              'window))))
 
 (defun geiser-racket--display-error (module key msg)
   (when key
