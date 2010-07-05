@@ -125,11 +125,15 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defconst geiser-racket--binding-forms
   '(for for/list for/hash for/hasheq for/and for/or
-    for/lists for/first for/last for/fold))
+    for/lists for/first for/last for/fold
+    for: for/list: for/hash: for/hasheq: for/and: for/or:
+    for/lists: for/first: for/last: for/fold:))
 
 (defconst geiser-racket--binding-forms*
   '(for* for*/list for*/lists for*/hash for*/hasheq for*/and
-    for*/or for*/first for*/last for*/fold))
+    for*/or for*/first for*/last for*/fold
+    for*: for*/list: for*/lists: for*/hash: for*/hasheq: for*/and:
+    for*/or: for*/first: for*/last: for*/fold:))
 
 ;;; External help
 
