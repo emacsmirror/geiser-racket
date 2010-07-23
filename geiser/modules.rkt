@@ -138,24 +138,30 @@
   module-cache)
 
 (define (module-exports mod)
+  (define (value id) (dynamic-require mod id (const #f)))
+  (define (contracted id)
+    (let ([v (value id)])
+      (if (has-contract? v)
+          (cons id (contract-name (value-contract v)))
+          id)))
   (define (extract-ids ls)
     (append-map (lambda (idls)
                   (map car (cdr idls)))
                 ls))
-  (define (classify-ids ids ns)
+  (define (classify-ids ids)
     (let loop ([ids ids] [procs '()] [vars '()])
       (cond [(null? ids)
-             `((procs ,@(reverse procs)) (vars ,@(reverse vars)))]
-            [(procedure?
-              (namespace-variable-value (car ids) #t (const #f) ns))
+             `((procs ,@(map contracted (reverse procs)))
+               (vars ,@(map contracted (reverse vars))))]
+            [(procedure? (value (car ids)))
              (loop (cdr ids) (cons (car ids) procs) vars)]
             [else (loop (cdr ids) procs (cons (car ids) vars))])))
   (let-values (((reg syn)
                 (module-compiled-exports
                  (get-module-code (resolve-module-path mod #f)))))
-    (let ((syn (extract-ids syn))
-          (reg (extract-ids reg)))
-      `((syntax ,@syn) ,@(classify-ids reg (module-spec->namespace mod))))))
+    (let ([syn (map contracted (extract-ids syn))]
+          [reg (extract-ids reg)])
+      `((syntax ,@syn) ,@(classify-ids reg)))))
 
 (define (startup)
  (thread update-module-cache)
