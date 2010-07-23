@@ -156,9 +156,9 @@
             [(procedure? (value (car ids)))
              (loop (cdr ids) (cons (car ids) procs) vars)]
             [else (loop (cdr ids) procs (cons (car ids) vars))])))
-  (let-values (((reg syn)
+  (let-values ([(reg syn)
                 (module-compiled-exports
-                 (get-module-code (resolve-module-path mod #f)))))
+                 (get-module-code (resolve-module-path mod #f)))])
     (let ([syn (map contracted (extract-ids syn))]
           [reg (extract-ids reg)])
       `((syntax ,@syn) ,@(classify-ids reg)))))
