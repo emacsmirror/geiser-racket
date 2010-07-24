@@ -138,7 +138,9 @@
   module-cache)
 
 (define (module-exports mod)
-  (define (value id) (dynamic-require mod id (const #f)))
+  (define (value id)
+    (with-handlers ([exn? (const #f)])
+      (dynamic-require mod id (const #f))))
   (define (contracted id)
     (let ([v (value id)])
       (if (has-contract? v)
