@@ -29,17 +29,17 @@
   (cond ((eq system-type 'windows-nt) "Racket.exe")
         ((eq system-type 'darwin) "racket")
         (t "racket"))
-  "Name to use to call the mzscheme executable when starting a REPL."
+  "Name to use to call the racket executable when starting a REPL."
   :type '(choice string (repeat string))
   :group 'geiser-racket)
 
 (geiser-custom--defcustom geiser-racket-collects nil
-  "A list of paths to be added to mzscheme's collection directories."
+  "A list of paths to be added to racket's collection directories."
   :type '(repeat file)
   :group 'geiser-racket)
 
 (geiser-custom--defcustom geiser-racket-init-file "~/.racket-geiser"
-  "Initialization file with user code for the mzscheme REPL."
+  "Initialization file with user code for the racket REPL."
   :type 'string
   :group 'geiser-racket)
 
@@ -53,7 +53,7 @@
     geiser-racket-binary))
 
 (defun geiser-racket--parameters ()
-  "Return a list with all parameters needed to start mzscheme.
+  "Return a list with all parameters needed to start racket.
 This function uses `geiser-racket-init-file' if it exists."
   (let ((init-file (and (stringp geiser-racket-init-file)
                         (expand-file-name geiser-racket-init-file))))
@@ -213,8 +213,6 @@ This function uses `geiser-racket-init-file' if it exists."
   (binding-forms geiser-racket--binding-forms)
   (binding-forms* geiser-racket--binding-forms*))
 
-(geiser-impl--add-to-alist 'regexp
-                           "\\.\\(mzscheme\\|racket\\)\\.sl?s$" 'racket t)
 (geiser-impl--add-to-alist 'regexp "\\.ss$" 'racket t)
 (geiser-impl--add-to-alist 'regexp "\\.rkt$" 'racket t)
 
