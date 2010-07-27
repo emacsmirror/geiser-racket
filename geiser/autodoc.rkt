@@ -26,17 +26,20 @@
       (map (lambda (id) (or (autodoc* id) (list id))) ids)))
 
 (define (autodoc* id)
+  (define (val)
+    (with-handlers ([exn? (const "")])
+      (format "~.a" (namespace-variable-value id))))
   (and
    (symbol? id)
    (let* ([loc (symbol-location* id)]
           [name (car loc)]
           [path (cdr loc)]
-          [sgns (and path (find-signatures path name id))]
-          [sgns (and sgns (if (list? sgns) sgns '()))])
+          [sgns (and path (find-signatures path name id))])
      (and sgns
           `(,id
             (name . ,name)
-            (args ,@(map format-signature sgns))
+            (value . ,(if (list? sgns) "" (val)))
+            (args ,@(if (list? sgns) (map format-signature sgns) '()))
             (module . ,(module-path-name->name path)))))))
 
 (define (format-signature sign)
