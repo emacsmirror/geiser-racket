@@ -22,7 +22,8 @@
          geiser:module-location
          geiser:module-exports
          geiser:autodoc
-         geiser:help)
+         geiser:help
+         geiser:no-values)
 
 (require geiser/eval
          geiser/modules
@@ -43,5 +44,6 @@
 (define geiser:module-location module-location)
 (define geiser:module-exports module-exports)
 (define geiser:macroexpand macroexpand)
+(define (geiser:no-values) (values))
 
 ;;; main.rkt ends here
