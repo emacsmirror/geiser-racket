@@ -17,6 +17,8 @@
          "Racket version 5.0 or better required (found ~a)"
          (version)))
 
+(require errortrace)
+
 (require geiser/user)
 
 ;;; geiser.rkt ends here
