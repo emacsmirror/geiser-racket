@@ -158,6 +158,14 @@ This function uses `geiser-racket-init-file' if it exists."
     "path:\"?\\([^>\"\n]+\\)\"?>"
     "module: \"\\([^>\"\n]+\\)\""))
 
+(defconst geiser-racket--geiser-file-rx
+  "^/[^:\n\"]*/geiser/[^:\n\"]*:")
+
+(defun geiser-racket--purge-trace ()
+  (save-excursion
+    (while (re-search-forward geiser-racket--geiser-file-rx nil t)
+      (kill-whole-line))))
+
 (defun geiser-racket--find-files (rx)
   (save-excursion
     (while (re-search-forward rx nil t)
@@ -179,6 +187,7 @@ This function uses `geiser-racket-init-file' if it exists."
       (when key
         (let ((end (point)))
         (goto-char p)
+        (geiser-racket--purge-trace)
         (mapc 'geiser-racket--find-files geiser-racket--file-rxs)
         (goto-char end)
         (newline)))))
