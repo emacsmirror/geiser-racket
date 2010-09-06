@@ -154,7 +154,7 @@ This function uses `geiser-racket-init-file' if it exists."
 ;;; Error display
 
 (defconst geiser-racket--file-rxs
-  '("^\\([^:\n\"]+\\):\\([0-9]+\\):\\([0-9]+\\)"
+  '(nil
     "path:\"?\\([^>\"\n]+\\)\"?>"
     "module: \"\\([^>\"\n]+\\)\""))
 
@@ -165,16 +165,6 @@ This function uses `geiser-racket-init-file' if it exists."
   (save-excursion
     (while (re-search-forward geiser-racket--geiser-file-rx nil t)
       (kill-whole-line))))
-
-(defun geiser-racket--find-files (rx)
-  (save-excursion
-    (while (re-search-forward rx nil t)
-      (geiser-edit--make-link (match-beginning 1)
-                              (match-end 1)
-                              (match-string 1)
-                              (match-string 2)
-                              (match-string 3)
-                              'window))))
 
 (defun geiser-racket--display-error (module key msg)
   (when key
@@ -188,10 +178,10 @@ This function uses `geiser-racket-init-file' if it exists."
         (let ((end (point)))
         (goto-char p)
         (geiser-racket--purge-trace)
-        (mapc 'geiser-racket--find-files geiser-racket--file-rxs)
+        (mapc 'geiser-edit--buttonize-files geiser-racket--file-rxs)
         (goto-char end)
         (newline)))))
-  t)
+  (or key (not (zerop (length msg)))))
 
 
 ;;; Trying to ascertain whether a buffer is mzscheme scheme:
