@@ -123,6 +123,9 @@ This function uses `geiser-racket-init-file' if it exists."
        (not (zerop (length module)))
        (format "(require %s)" module)))
 
+(defun geiser-racket--exit-command ()
+  (not (geiser-eval--send/result '(:eval (exit) geiser/emacs))))
+
 (defconst geiser-racket--binding-forms
   '(for for/list for/hash for/hasheq for/and for/or
     for/lists for/first for/last for/fold
@@ -205,6 +208,7 @@ This function uses `geiser-racket-init-file' if it exists."
   (find-module geiser-racket--get-module)
   (enter-command geiser-racket--enter-command)
   (import-command geiser-racket--import-command)
+  (exit-command geiser-racket--exit-command)
   (find-symbol-begin geiser-racket--symbol-begin)
   (display-error geiser-racket--display-error)
   (display-help geiser-racket--external-help)
