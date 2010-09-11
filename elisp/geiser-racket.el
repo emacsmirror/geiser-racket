@@ -180,7 +180,7 @@ This function uses `geiser-racket-init-file' if it exists."
     "module: \"\\([^>\"\n]+\\)\""))
 
 (defconst geiser-racket--geiser-file-rx
-  "^/[^:\n\"]*/geiser/[^:\n\"]*:")
+  (format "^%s/?racket/geiser" (regexp-quote geiser-scheme-dir)))
 
 (defun geiser-racket--purge-trace ()
   (save-excursion
