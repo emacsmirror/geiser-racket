@@ -27,9 +27,17 @@
 
 (geiser-custom--defcustom geiser-racket-binary
   (cond ((eq system-type 'windows-nt) "Racket.exe")
-        ((eq system-type 'darwin) "racket")
         (t "racket"))
   "Name to use to call the racket executable when starting a REPL."
+  :type '(choice string (repeat string))
+  :group 'geiser-racket)
+
+(geiser-custom--defcustom geiser-racket-gracket-binary
+  (cond ((eq system-type 'windows-nt) "GRacket-text.exe")
+        (t "gracket-text"))
+  "Name to use to call the gracket executable when starting a REPL.
+This executable is used by `run-gracket', and, if
+`geiser-racket-use-gracket-p' is set to t, by `run-racket'."
   :type '(choice string (repeat string))
   :group 'geiser-racket)
 
@@ -43,24 +51,34 @@
   :type 'string
   :group 'geiser-racket)
 
+(geiser-custom--defcustom geiser-racket-use-gracket-p nil
+  "Whether to use the gracket binary to start Racket REPLs."
+  :type 'boolean
+  :group 'geiser-racket)
+
 
 
 ;;; REPL support:
 
-(defun geiser-racket--binary ()
-  (if (listp geiser-racket-binary)
-      (car geiser-racket-binary)
+(defsubst geiser-racket--real-binary ()
+  (if geiser-racket-use-gracket-p
+      geiser-racket-gracket-binary
     geiser-racket-binary))
+
+(defun geiser-racket--binary ()
+  (let ((binary (geiser-racket--real-binary)))
+    (if (listp binary) (car binary) binary)))
 
 (defun geiser-racket--parameters ()
   "Return a list with all parameters needed to start racket.
 This function uses `geiser-racket-init-file' if it exists."
   (let ((init-file (and (stringp geiser-racket-init-file)
-                        (expand-file-name geiser-racket-init-file))))
+                        (expand-file-name geiser-racket-init-file)))
+        (binary (geiser-racket--real-binary)))
     `("-i" "-q"
       "-S" ,(expand-file-name "racket/" geiser-scheme-dir)
       ,@(apply 'append (mapcar (lambda (p) (list "-S" p)) geiser-racket-collects))
-      ,@(and (listp geiser-racket-binary) (cdr geiser-racket-binary))
+      ,@(and (listp binary) (cdr binary))
       ,@(and init-file (file-readable-p init-file) (list "-f" init-file))
       "-f" ,(expand-file-name "racket/geiser.rkt" geiser-scheme-dir))))
 
@@ -218,6 +236,12 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (geiser-impl--add-to-alist 'regexp "\\.ss$" 'racket t)
 (geiser-impl--add-to-alist 'regexp "\\.rkt$" 'racket t)
+
+(defun run-gracket ()
+  "Start the Racket REPL using gracket instead of plain racket."
+  (interactive)
+  (let ((geiser-racket-use-gracket-p t))
+    (run-racket)))
 
 
 (provide 'geiser-racket)
