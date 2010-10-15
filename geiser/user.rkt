@@ -13,7 +13,7 @@
 
 (provide enter!)
 
-(require geiser/enter geiser/eval (for-syntax scheme/base))
+(require geiser/enter geiser/eval (for-syntax racket/base))
 
 (define-syntax (enter! stx)
   (syntax-case stx ()
