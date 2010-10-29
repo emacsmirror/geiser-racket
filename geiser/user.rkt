@@ -15,42 +15,35 @@
 
 (require geiser/enter geiser/eval (for-syntax racket/base))
 
-(define-syntax (enter! stx)
-  (syntax-case stx ()
-    [(enter! mod)
-     (if (or (not (syntax-e #'mod))
-             (module-path? (syntax->datum #'mod)))
-         #'(do-enter! 'mod)
-         (raise-syntax-error
-          #f
-          "not a valid module path, and not #f"
-          stx
-          #'mod))]
-    [_ (raise-syntax-error
-        #f
-        "bad syntax; should be `(enter! <module-path-or-#f>)'"
-        stx)]))
+(define top-namespace (current-namespace))
 
-(define orig-namespace (current-namespace))
-
-(define (do-enter! mod)
-  (if mod
-      (begin
-        (enter-module mod)
-        (let ([ns (module->namespace mod)])
-          (current-namespace ns)
-          (namespace-require 'geiser/user)))
-      (current-namespace orig-namespace)))
-
+(define (enter! mod stx)
+  (cond ((not mod) (current-namespace top-namespace))
+        ((module-path? mod)
+         (enter-module mod)
+         (current-namespace (module->namespace mod)))
+        (else (raise-syntax-error
+               #f
+               "not a valid module path, and not #f"
+               stx
+               mod))))
 
 (define orig-loader (current-load/use-compiled))
+
+(define orig-reader (current-prompt-read))
+
+(define (geiser-read)
+  (let ((form (orig-reader)))
+    (syntax-case form ()
+      ((uq cmd) (and (eq? 'unquote (syntax-e #'uq))
+                     (eq? 'enter (syntax-e #'cmd)))
+       (enter! (read) #'cmd))
+      (_ form))))
 
 (define (init)
   (compile-enforce-module-constants #f)
   (current-load/use-compiled (module-loader orig-loader))
-  (current-prompt-read (compose (make-repl-reader (current-prompt-read))
-                                current-namespace)))
+  (current-prompt-read
+   (compose (make-repl-reader geiser-read) current-namespace)))
 
 (init)
-
-;;; user.rkt ends here
