@@ -132,9 +132,9 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defun geiser-racket--enter-command (module)
   (when (stringp module)
-    (cond ((zerop (length module)) "(enter! #f)")
-          ((file-name-absolute-p module) (format "(enter! (file %S))" module))
-          (t (format "(enter! %s)" module)))))
+    (cond ((zerop (length module)) ",enter #f")
+          ((file-name-absolute-p module) (format ",enter (file %S)" module))
+          (t (format ",enter %s" module)))))
 
 (defun geiser-racket--import-command (module)
   (and (stringp module)
