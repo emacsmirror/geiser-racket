@@ -93,12 +93,19 @@ This function uses `geiser-racket-init-file' if it exists."
     (if (re-search-forward
          "^\\(?:#lang\\|(module +[^ ]+?\\) +\\([^ ]+?\\|([^)]+)\\) *$" nil t)
         (car (geiser-syntax--read-from-string (match-string-no-properties 1)))
-      :f)))
+      "#f")))
 
-(defun geiser-racket--geiser-procedure (proc)
-  (if (memq proc '(eval compile))
-      `((dynamic-require 'geiser 'geiser:eval) ',(geiser-racket--language))
-    `(dynamic-require 'geiser ',(intern (format "geiser:%s" proc)))))
+(defun geiser-racket--geiser-procedure (proc &rest args)
+  (case proc
+    ((eval compile)
+     (format ",eval %s %s %s"
+             (or (car args) "#f")
+             (geiser-racket--language)
+             (mapconcat 'identity (cdr args) " ")))
+    ((load-file compile-file)
+     (format ",eval geiser/main racket (geiser:%s %s)" proc (car args)))
+    ((no-values) ",no-values")
+    (t (format ",apply geiser:%s (%s)" proc (mapconcat 'identity args " ")))))
 
 (defconst geiser-racket--module-re
   "^(module +\\([^ ]+\\)")
