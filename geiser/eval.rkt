@@ -63,10 +63,8 @@
 (define compile-in eval-in)
 
 (define (load-file file)
-  (call-with-result
-   (lambda ()
-     (load-module file (current-output-port) (last-namespace))
-     (update-signature-cache file))))
+  (load-module file (current-output-port) (last-namespace))
+  (update-signature-cache file))
 
 (define compile-file load-file)
 
