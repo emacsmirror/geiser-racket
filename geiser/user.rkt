@@ -51,8 +51,8 @@
       ((uq cmd) (eq? 'unquote (syntax-e #'uq))
        (case (syntax-e #'cmd)
          ((enter) (enter! (read) #'cmd))
-         ((eval) (geiser-eval))
-         ((no-values) (datum->syntax #f (void)))
+         ((geiser-eval) (geiser-eval))
+         ((geiser-no-values) (datum->syntax #f (void)))
          (else form)))
       (_ form))))
 
