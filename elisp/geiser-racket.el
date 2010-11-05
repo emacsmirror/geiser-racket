@@ -168,7 +168,7 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defsubst geiser-racket--get-help (symbol module)
   (geiser-eval--send/wait
-   `(:eval (get-help ',symbol (:module ,module)) geiser/autodoc)))
+   `(:eval (get-help ',symbol '(:module ,module)) geiser/autodoc)))
 
 (defun geiser-racket--external-help (id module)
   (message "Requesting help for '%s'..." id)
