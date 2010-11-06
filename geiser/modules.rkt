@@ -74,7 +74,7 @@
                (call-with-values (lambda () (split-path path))
                  (lambda (_ basename __) (path->string basename)))
                (regexp-replace "\\.[^./]*$" real-path "")))]
-        [(eq? path '#%kernel) "(kernel)"]
+        ;; [(eq? path '#%kernel) "(kernel)"]
         [(string? path) path]
         [(symbol? path) (symbol->string path)]
         [else ""]))

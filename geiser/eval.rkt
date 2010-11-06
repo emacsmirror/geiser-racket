@@ -55,10 +55,11 @@
     (append last-result `((output . ,output)))))
 
 (define (eval-in form spec lang)
-  (call-with-result
-   (lambda ()
-     (update-signature-cache spec form)
-     (eval form (module-spec->namespace spec lang)))))
+  (write (call-with-result
+          (lambda ()
+            (update-signature-cache spec form)
+            (eval form (module-spec->namespace spec lang)))))
+  (newline))
 
 (define compile-in eval-in)
 

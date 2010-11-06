@@ -11,7 +11,7 @@
 
 #lang racket/base
 
-(provide enter!)
+(provide init-geiser-repl run-geiser-repl enter!)
 
 (require geiser/main geiser/enter geiser/eval (for-syntax racket/base))
 
@@ -29,6 +29,7 @@
                mod))))
 
 (define orig-loader (current-load/use-compiled))
+(define geiser-loader (module-loader orig-loader))
 
 (define orig-reader (current-prompt-read))
 
@@ -56,10 +57,19 @@
          (else form)))
       (_ form))))
 
-(define (init)
-  (compile-enforce-module-constants #f)
-  (current-load/use-compiled (module-loader orig-loader))
-  (current-prompt-read
-   (compose (make-repl-reader geiser-read) current-namespace)))
+(define geiser-prompt-read
+  (compose (make-repl-reader geiser-read) current-namespace))
 
-(init)
+(define (init-geiser-repl)
+  (compile-enforce-module-constants #f)
+  (current-load/use-compiled geiser-loader)
+  (current-prompt-read geiser-prompt-read))
+
+(define (run-geiser-repl in out (enforce-module-constants #f))
+  (parameterize [(compile-enforce-module-constants enforce-module-constants)
+                 (current-input-port in)
+                 (current-output-port out)
+                 (current-error-port out)
+                 (current-load/use-compiled geiser-loader)
+                 (current-prompt-read geiser-prompt-read)]
+    (read-eval-print-loop)))
