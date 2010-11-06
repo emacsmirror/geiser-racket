@@ -98,12 +98,12 @@ This function uses `geiser-racket-init-file' if it exists."
 (defun geiser-racket--geiser-procedure (proc &rest args)
   (case proc
     ((eval compile)
-     (format ",geiser-eval %s %s %s"
+     (format ",geiser-eval %s %s %s\n"
              (or (car args) "#f")
              (geiser-racket--language)
              (mapconcat 'identity (cdr args) " ")))
     ((load-file compile-file)
-     (format ",geiser-eval geiser/main racket (geiser:%s %s)"
+     (format ",geiser-eval geiser/main racket (geiser:%s %s)\n"
              proc (car args)))
     ((no-values) ",geiser-no-values")
     (t (format ",apply geiser:%s (%s)" proc (mapconcat 'identity args " ")))))
@@ -150,7 +150,8 @@ This function uses `geiser-racket-init-file' if it exists."
        (format "(require %s)" module)))
 
 (defun geiser-racket--exit-command ()
-  (not (geiser-eval--send/result '(:eval (exit) geiser/emacs))))
+  (comint-send-eof)
+  (get-buffer-process (current-buffer)))
 
 (defconst geiser-racket--binding-forms
   '(for for/list for/hash for/hasheq for/and for/or
