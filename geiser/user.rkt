@@ -65,7 +65,7 @@
   (current-load/use-compiled geiser-loader)
   (current-prompt-read geiser-prompt-read))
 
-(define (run-geiser-repl in out (enforce-module-constants #f))
+(define (run-geiser-repl in out enforce-module-constants)
   (parameterize [(compile-enforce-module-constants enforce-module-constants)
                  (current-input-port in)
                  (current-output-port out)
