@@ -37,16 +37,16 @@
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser/main))
   (geiser-send-null #t)
-  (let* ((mod (read))
-         (lang (read))
-         (form (read)))
+  (let* ([mod (read)]
+         [lang (read)]
+         [form (read)])
     (datum->syntax #f
                    (list 'quote
-                         (cond ((equal? form '(unquote apply))
-                                (let* ((proc (eval (read) geiser-main))
-                                       (args (read)))
-                                  ((geiser:eval lang) `(,proc ,@args) mod)))
-                               (else ((geiser:eval lang) form mod)))))))
+                         (cond [(equal? form '(unquote apply))
+                                (let* ([proc (eval (read) geiser-main)]
+                                       [args (read)])
+                                  ((geiser:eval lang) `(,proc ,@args) mod))]
+                               [else ((geiser:eval lang) form mod)])))))
 
 (define (geiser-read)
   (if (geiser-send-null)
