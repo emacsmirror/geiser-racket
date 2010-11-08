@@ -36,6 +36,7 @@
 
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser/main))
+  (geiser-send-null #t)
   (let* ((mod (read))
          (lang (read))
          (form (read)))
@@ -57,13 +58,11 @@
 	 [form ((current-read-interaction) (object-name in) in)])
     (syntax-case form ()
       [(uq cmd) (eq? 'unquote (syntax-e #'uq))
-       (begin
-	 (geiser-send-null #t)
-	 (case (syntax-e #'cmd)
-	   ((enter) (enter! (read) #'cmd))
-	   ((geiser-eval) (geiser-eval))
-	   ((geiser-no-values) (datum->syntax #f (void)))
-	   (else form)))]
+       (case (syntax-e #'cmd)
+         ((enter) (enter! (read) #'cmd))
+         ((geiser-eval) (geiser-eval))
+         ((geiser-no-values) (datum->syntax #f (void)))
+         (else form))]
       [_ form])))
 
 (define geiser-prompt-read (make-repl-reader geiser-read))
