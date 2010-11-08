@@ -230,6 +230,7 @@ This function uses `geiser-racket-init-file' if it exists."
   (binary geiser-racket--binary)
   (arglist geiser-racket--parameters)
   (startup)
+  (eot-regexp "\0")
   (prompt-regexp geiser-racket--prompt-regexp)
   (marshall-procedure geiser-racket--geiser-procedure)
   (find-module geiser-racket--get-module)
