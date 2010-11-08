@@ -17,14 +17,12 @@
          compile-file
          macroexpand
          make-repl-reader)
+	 
 
 (require geiser/enter geiser/modules geiser/autodoc)
 (require errortrace/errortrace-lib)
 
 (define last-result (void))
-
-(define namespace->module-name
-  (compose module-path-name->name namespace->module-path-name))
 
 (define last-namespace (make-parameter (current-namespace)))
 
@@ -59,8 +57,7 @@
           (lambda ()
             (update-signature-cache spec form)
             (eval form (module-spec->namespace spec lang)))))
-  (newline)
-  (flush-output))
+  (newline))
 
 (define compile-in eval-in)
 
@@ -76,10 +73,9 @@
       (lambda ()
         (pretty-print (syntax->datum ((if all expand expand-once) form)))))))
 
-(define (make-repl-reader builtin-reader)
-  (lambda (ns)
-    (last-namespace ns)
-    (printf "racket@~a" (namespace->module-name ns))
-    (builtin-reader)))
+(define (make-repl-reader reader)
+  (lambda ()
+    (last-namespace (current-namespace))
+    (reader)))
 
 ;;; eval.rkt ends here

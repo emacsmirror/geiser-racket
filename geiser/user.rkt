@@ -13,7 +13,8 @@
 
 (provide init-geiser-repl run-geiser-repl enter!)
 
-(require geiser/main geiser/enter geiser/eval (for-syntax racket/base))
+(require (for-syntax racket/base)
+	 geiser/main geiser/enter geiser/eval geiser/modules)
 
 (define top-namespace (current-namespace))
 
@@ -31,7 +32,7 @@
 (define orig-loader (current-load/use-compiled))
 (define geiser-loader (module-loader orig-loader))
 
-(define orig-reader (current-prompt-read))
+(define geiser-send-null (make-parameter #f))
 
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser/main))
@@ -47,18 +48,25 @@
                                (else ((geiser:eval lang) form mod)))))))
 
 (define (geiser-read)
-  (let ((form (orig-reader)))
+  (if (geiser-send-null)
+      (begin (geiser-send-null #f)
+	     (write-char #\nul))
+      (printf "racket@~a> " (namespace->module-name (current-namespace))))
+  (flush-output)
+  (let* ([in (current-input-port)]
+	 [form ((current-read-interaction) (object-name in) in)])
     (syntax-case form ()
-      ((uq cmd) (eq? 'unquote (syntax-e #'uq))
-       (case (syntax-e #'cmd)
-         ((enter) (enter! (read) #'cmd))
-         ((geiser-eval) (geiser-eval))
-         ((geiser-no-values) (datum->syntax #f (void)))
-         (else form)))
-      (_ form))))
+      [(uq cmd) (eq? 'unquote (syntax-e #'uq))
+       (begin
+	 (geiser-send-null #t)
+	 (case (syntax-e #'cmd)
+	   ((enter) (enter! (read) #'cmd))
+	   ((geiser-eval) (geiser-eval))
+	   ((geiser-no-values) (datum->syntax #f (void)))
+	   (else form)))]
+      [_ form])))
 
-(define geiser-prompt-read
-  (compose (make-repl-reader geiser-read) current-namespace))
+(define geiser-prompt-read (make-repl-reader geiser-read))
 
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)

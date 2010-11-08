@@ -14,6 +14,7 @@
 (provide load-module
          ensure-module-spec
          module-spec->namespace
+	 namespace->module-name
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
@@ -78,6 +79,9 @@
         [(string? path) path]
         [(symbol? path) (symbol->string path)]
         [else ""]))
+
+(define namespace->module-name
+  (compose module-path-name->name namespace->module-path-name))
 
 (define (skippable-dir? path)
   (call-with-values (lambda () (split-path path))
