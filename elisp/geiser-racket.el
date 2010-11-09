@@ -223,6 +223,18 @@ This function uses `geiser-racket-init-file' if it exists."
       (geiser-racket--explicit-module)))
 
 
+;;; Remote REPLs
+
+(defun connect-to-racket ()
+  "Start a Racket REPL connected to a remote process.
+
+The remote process needs to be running a REPL server started
+using start-geiser, a procedure in the geiser/server module."
+  (interactive)
+  (geiser-connect 'racket))
+
+
+
 ;;; Implementation definition:
 
 (define-geiser-implementation racket
