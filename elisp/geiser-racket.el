@@ -84,6 +84,8 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defconst geiser-racket--prompt-regexp "^=?\\(mzscheme\\|racket\\)@[^ ]*?> ")
 
+(defconst geiser-racket--init-server-cmd ",start-geiser")
+
 
 ;;; Evaluation support:
 
@@ -241,6 +243,7 @@ using start-geiser, a procedure in the geiser/server module."
   (unsupported-procedures '(callers callees generic-methods))
   (binary geiser-racket--binary)
   (arglist geiser-racket--parameters)
+  (init-server-cmd geiser-racket--init-server-cmd)
   (startup)
   (prompt-regexp geiser-racket--prompt-regexp)
   (marshall-procedure geiser-racket--geiser-procedure)
