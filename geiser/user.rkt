@@ -32,11 +32,8 @@
 (define orig-loader (current-load/use-compiled))
 (define geiser-loader (module-loader orig-loader))
 
-(define geiser-send-null (make-parameter #f))
-
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser/main))
-  (geiser-send-null #t)
   (let* ([mod (read)]
          [lang (read)]
          [form (read)])
@@ -49,10 +46,7 @@
                                [else ((geiser:eval lang) form mod)])))))
 
 (define (geiser-read)
-  (if (geiser-send-null)
-      (begin (geiser-send-null #f)
-	     (write-char #\nul))
-      (printf "racket@~a> " (namespace->module-name (current-namespace))))
+  (printf "racket@~a> " (namespace->module-name (current-namespace)))
   (flush-output)
   (let* ([in (current-input-port)]
 	 [form ((current-read-interaction) (object-name in) in)])
