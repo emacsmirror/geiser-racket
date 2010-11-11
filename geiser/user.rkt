@@ -11,10 +11,15 @@
 
 #lang racket/base
 
-(provide init-geiser-repl run-geiser-repl enter!)
+(provide init-geiser-repl run-geiser-server start-geiser)
 
 (require (for-syntax racket/base)
-	 geiser/main geiser/enter geiser/eval geiser/modules)
+         mzlib/thread
+         racket/tcp
+         geiser/main
+         geiser/enter
+         geiser/eval
+         geiser/modules)
 
 (define top-namespace (current-namespace))
 
@@ -42,29 +47,38 @@
                          (cond [(equal? form '(unquote apply))
                                 (let* ([proc (eval (read) geiser-main)]
                                        [args (read)])
-                                  ((geiser:eval lang) `(,proc ,@args) mod))]
-                               [else ((geiser:eval lang) form mod)])))))
+                                  (eval-in `(,proc ,@args) mod lang))]
+                               [else (eval-in form mod lang)])))))
 
-(define (geiser-read)
-  (printf "racket@~a> " (namespace->module-name (current-namespace)))
+(define ((geiser-read prompt))
+  (prompt)
   (flush-output)
   (let* ([in (current-input-port)]
 	 [form ((current-read-interaction) (object-name in) in)])
     (syntax-case form ()
       [(uq cmd) (eq? 'unquote (syntax-e #'uq))
        (case (syntax-e #'cmd)
-         ((enter) (enter! (read) #'cmd))
-         ((geiser-eval) (geiser-eval))
-         ((geiser-no-values) (datum->syntax #f (void)))
-         (else form))]
+         [(start-geiser) (datum->syntax #f `(list 'port ,(start-geiser)))]
+         [(enter) (enter! (read) #'cmd)]
+         [(geiser-eval) (geiser-eval)]
+         [(geiser-no-values) (datum->syntax #f (void))]
+         [else form])]
       [_ form])))
 
-(define geiser-prompt-read (make-repl-reader geiser-read))
+(define geiser-prompt
+  (lambda () (printf "> ")))
+
+(define geiser-server-prompt
+  (lambda ()
+    (printf "racket@~a> " (namespace->module-name (current-namespace)))))
+
+(define (geiser-prompt-read prompt)
+  (make-repl-reader (geiser-read prompt)))
 
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
   (current-load/use-compiled geiser-loader)
-  (current-prompt-read geiser-prompt-read))
+  (current-prompt-read (geiser-prompt-read geiser-prompt)))
 
 (define (run-geiser-repl in out enforce-module-constants)
   (parameterize [(compile-enforce-module-constants enforce-module-constants)
@@ -72,5 +86,24 @@
                  (current-output-port out)
                  (current-error-port out)
                  (current-load/use-compiled geiser-loader)
-                 (current-prompt-read geiser-prompt-read)]
+                 (current-prompt-read (geiser-prompt-read
+                                       geiser-server-prompt))]
     (read-eval-print-loop)))
+
+(define server-channel (make-channel))
+
+(define (run-geiser-server port enforce-module-constants)
+  (run-server port
+              (lambda (in out)
+                (run-geiser-repl in out enforce-module-constants))
+              #f
+              void
+              (lambda (p _ __)
+                (let ([lsner (tcp-listen p)])
+                  (let-values ([(_ p __ ___) (tcp-addresses lsner #t)])
+                    (channel-put server-channel p)
+                    lsner)))))
+
+(define (start-geiser (port 0) (enforce-module-constants #f))
+  (thread (lambda () (run-geiser-server port enforce-module-constants)))
+  (channel-get server-channel))

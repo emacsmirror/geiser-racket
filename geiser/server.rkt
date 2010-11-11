@@ -11,14 +11,6 @@
 
 #lang racket/base
 
-(require geiser/user mzlib/thread)
-(provide run-geiser-server start-geiser)
+(require geiser/user)
+(provide start-geiser)
 
-(define (run-geiser-server port enforce-module-constants)
-  (run-server port
-              (lambda (in out)
-                (run-geiser-repl in out enforce-module-constants))
-              #f))
-
-(define (start-geiser (port 1969) (enforce-module-constants #f))
-  (thread (lambda () (run-geiser-server port enforce-module-constants))))

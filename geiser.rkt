@@ -18,8 +18,6 @@
          (version)))
 
 (require errortrace)
-
 (require geiser/user)
-(init-geiser-repl)
 
-;;; geiser.rkt ends here
+(init-geiser-repl)
