@@ -242,7 +242,6 @@ using start-geiser, a procedure in the geiser/server module."
   (binary geiser-racket--binary)
   (arglist geiser-racket--parameters)
   (startup)
-  (eot-regexp "\0")
   (prompt-regexp geiser-racket--prompt-regexp)
   (marshall-procedure geiser-racket--geiser-procedure)
   (find-module geiser-racket--get-module)
