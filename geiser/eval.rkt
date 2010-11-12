@@ -17,7 +17,7 @@
          compile-file
          macroexpand
          make-repl-reader)
-	 
+
 
 (require geiser/enter geiser/modules geiser/autodoc)
 (require errortrace/errortrace-lib)
@@ -57,6 +57,7 @@
           (lambda ()
             (update-signature-cache spec form)
             (eval form (module-spec->namespace spec lang)))))
+  (write-char #\null)
   (newline))
 
 (define compile-in eval-in)
