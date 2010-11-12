@@ -82,7 +82,7 @@ This function uses `geiser-racket-init-file' if it exists."
       ,@(and init-file (file-readable-p init-file) (list "-f" init-file))
       "-f" ,(expand-file-name "racket/geiser.rkt" geiser-scheme-dir))))
 
-(defconst geiser-racket--prompt-regexp "^=?\\(mzscheme\\|racket\\)@[^ ]*?> ")
+(defconst geiser-racket--prompt-regexp "\\(mzscheme\\|racket\\)@[^ ]*?> ")
 
 (defconst geiser-racket--init-server-command ",start-geiser")
 
@@ -96,6 +96,12 @@ This function uses `geiser-racket-init-file' if it exists."
          "^\\(?:#lang\\|(module +[^ ]+?\\) +\\([^ ]+?\\|([^)]+)\\) *$" nil t)
         (car (geiser-syntax--read-from-string (match-string-no-properties 1)))
       "#f")))
+
+(defun geiser-racket--enter-command (module)
+  (when (stringp module)
+    (cond ((zerop (length module)) ",enter #f")
+          ((file-name-absolute-p module) (format ",enter (file %S)" module))
+          (t (format ",enter %s" module)))))
 
 (defun geiser-racket--geiser-procedure (proc &rest args)
   (case proc
@@ -139,12 +145,6 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defun geiser-racket--symbol-begin (module)
   (save-excursion (skip-syntax-backward "^-()>") (point)))
-
-(defun geiser-racket--enter-command (module)
-  (when (stringp module)
-    (cond ((zerop (length module)) ",enter #f")
-          ((file-name-absolute-p module) (format ",enter (file %S)" module))
-          (t (format ",enter %s" module)))))
 
 (defun geiser-racket--import-command (module)
   (and (stringp module)
