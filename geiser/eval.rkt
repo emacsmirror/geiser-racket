@@ -57,7 +57,6 @@
           (lambda ()
             (update-signature-cache spec form)
             (eval form (module-spec->namespace spec lang)))))
-  (write-char #\null)
   (newline))
 
 (define compile-in eval-in)
