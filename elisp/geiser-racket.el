@@ -244,7 +244,6 @@ using start-geiser, a procedure in the geiser/server module."
   (binary geiser-racket--binary)
   (arglist geiser-racket--parameters)
   (init-server-command geiser-racket--init-server-command)
-  (startup)
   (prompt-regexp geiser-racket--prompt-regexp)
   (marshall-procedure geiser-racket--geiser-procedure)
   (find-module geiser-racket--get-module)
