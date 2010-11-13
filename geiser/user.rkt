@@ -66,9 +66,6 @@
       [_ form])))
 
 (define geiser-prompt
-  (lambda () (printf "> ")))
-
-(define geiser-server-prompt
   (lambda ()
     (printf "racket@~a> " (namespace->module-name (current-namespace)))))
 
@@ -86,8 +83,7 @@
                  (current-output-port out)
                  (current-error-port out)
                  (current-load/use-compiled geiser-loader)
-                 (current-prompt-read (geiser-prompt-read
-                                       geiser-server-prompt))]
+                 (current-prompt-read (geiser-prompt-read geiser-prompt))]
     (read-eval-print-loop)))
 
 (define server-channel (make-channel))
