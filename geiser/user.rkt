@@ -24,15 +24,15 @@
 (define top-namespace (current-namespace))
 
 (define (enter! mod stx)
-  (cond ((not mod) (current-namespace top-namespace))
-        ((module-path? mod)
+  (cond [(not mod) (current-namespace top-namespace)]
+        [(module-path? mod)
          (enter-module mod)
-         (current-namespace (module->namespace mod)))
-        (else (raise-syntax-error
+         (current-namespace (module->namespace mod))]
+        [else (raise-syntax-error
                #f
                "not a valid module path, and not #f"
                stx
-               mod))))
+               mod)]))
 
 (define orig-loader (current-load/use-compiled))
 (define geiser-loader (module-loader orig-loader))

@@ -187,5 +187,3 @@
                             '(define-syntax-rule struct
                                define-syntax define set! define-struct)))))
     (hash-remove! signatures path)))
-
-;;; autodoc.rkt ends here

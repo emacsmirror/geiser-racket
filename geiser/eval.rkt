@@ -77,5 +77,3 @@
   (lambda ()
     (last-namespace (current-namespace))
     (reader)))
-
-;;; eval.rkt ends here
