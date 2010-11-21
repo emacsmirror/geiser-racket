@@ -32,10 +32,18 @@
          geiser/autodoc)
 
 (define (geiser:eval lang)
-  (lambda (form spec) (eval-in form spec lang)))
-(define geiser:compile compile-in)
-(define geiser:load-file load-file)
-(define geiser:compile-file compile-file)
+  (lambda (form spec)
+    (update-signature-cache spec form)
+    (eval-in form spec lang)))
+
+(define geiser:compile geiser:eval)
+
+(define (geiser:load-file file)
+  (update-signature-cache file)
+  (load-file file))
+
+(define geiser:compile-file geiser:load-file)
+
 (define geiser:autodoc autodoc)
 (define geiser:help get-help)
 (define geiser:completions symbol-completions)

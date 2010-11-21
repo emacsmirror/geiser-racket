@@ -11,9 +11,14 @@
 
 #lang racket
 
-(provide autodoc update-signature-cache get-help)
+(provide autodoc module-exports update-signature-cache get-help)
 
-(require geiser/utils geiser/modules geiser/locations scheme/help)
+(require racket/help
+         syntax/modcode
+         syntax/modresolve
+         geiser/utils
+         geiser/modules
+         geiser/locations)
 
 (define (get-help symbol mod)
   (with-handlers ([exn? (lambda (_)
@@ -25,7 +30,7 @@
       '()
       (map (lambda (id) (or (autodoc* id) (list id))) ids)))
 
-(define (autodoc* id)
+(define (autodoc* id (extra #t))
   (define (val)
     (with-handlers ([exn? (const "")])
       (format "~.a" (namespace-variable-value id))))
@@ -34,13 +39,20 @@
    (let* ([loc (symbol-location* id)]
           [name (car loc)]
           [path (cdr loc)]
-          [sgns (and path (find-signatures path name id))])
+          [sgns (and path (find-signatures path name id))]
+          [value (if (and extra sgns (not (list? sgns)))
+                     (list (cons 'value (val)))
+                     '())]
+          [mod (if (and extra sgns path)
+                   (list (cons 'module
+                               (module-path-name->name path)))
+                   '())])
      (and sgns
           `(,id
             (name . ,name)
-            (value . ,(if (list? sgns) "" (val)))
             (args ,@(if (list? sgns) (map format-signature sgns) '()))
-            (module . ,(module-path-name->name path)))))))
+            ,@value
+            ,@mod)))))
 
 (define (format-signature sign)
   (if (signature? sign)
@@ -178,12 +190,44 @@
         [(list? arity) (map arity->signature arity)]
         [else (list (arity->signature arity))]))
 
-(define (update-signature-cache path . form)
+(define (update-signature-cache path (form #f))
   (when (and (string? path)
-             (or (null? form)
-                 (and (list? (car form))
-                      (not (null? (car form)))
-                      (memq (caar form)
+             (or (not form)
+                 (and (list? form)
+                      (not (null? form))
+                      (memq (car form)
                             '(define-syntax-rule struct
                                define-syntax define set! define-struct)))))
     (hash-remove! signatures path)))
+
+(define (module-exports mod)
+  (define (value id)
+    (with-handlers ([exn? (const #f)])
+      (dynamic-require mod id (const #f))))
+  (define (contracted id)
+    (let ([v (value id)])
+      (if (has-contract? v)
+          (list id (cons 'info (contract-name (value-contract v))))
+          (entry id))))
+  (define (entry id)
+    (let ((sign (eval `(,autodoc* ',id #f)
+                      (module-spec->namespace mod #f #f))))
+      (if sign (list id (cons 'signature sign)) (list id))))
+  (define (extract-ids ls)
+    (append-map (lambda (idls)
+                  (map car (cdr idls)))
+                ls))
+  (define (classify-ids ids)
+    (let loop ([ids ids] [procs '()] [vars '()])
+      (cond [(null? ids)
+             `((procs ,@(map entry (reverse procs)))
+               (vars ,@(map list (reverse vars))))]
+            [(procedure? (value (car ids)))
+             (loop (cdr ids) (cons (car ids) procs) vars)]
+            [else (loop (cdr ids) procs (cons (car ids) vars))])))
+  (let-values ([(reg syn)
+                (module-compiled-exports
+                 (get-module-code (resolve-module-path mod #f)))])
+    (let ([syn (map contracted (extract-ids syn))]
+          [reg (extract-ids reg)])
+      `((syntax ,@syn) ,@(classify-ids reg)))))

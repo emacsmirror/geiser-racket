@@ -18,10 +18,9 @@
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
-         module-list
-         module-exports)
+         module-list)
 
-(require srfi/13 syntax/modresolve syntax/modcode geiser/enter)
+(require srfi/13 geiser/enter)
 
 (define (ensure-module-spec spec)
   (cond [(symbol? spec) spec]
@@ -141,38 +140,8 @@
   (update-module-cache)
   module-cache)
 
-(define (module-exports mod)
-  (define (value id)
-    (with-handlers ([exn? (const #f)])
-      (dynamic-require mod id (const #f))))
-  (define (contracted id)
-    (let ([v (value id)])
-      (if (has-contract? v)
-          (cons id (contract-name (value-contract v)))
-          id)))
-  (define (extract-ids ls)
-    (append-map (lambda (idls)
-                  (map car (cdr idls)))
-                ls))
-  (define (classify-ids ids)
-    (let loop ([ids ids] [procs '()] [vars '()])
-      (cond [(null? ids)
-             `((procs ,@(map contracted (reverse procs)))
-               (vars ,@(map contracted (reverse vars))))]
-            [(procedure? (value (car ids)))
-             (loop (cdr ids) (cons (car ids) procs) vars)]
-            [else (loop (cdr ids) procs (cons (car ids) vars))])))
-  (let-values ([(reg syn)
-                (module-compiled-exports
-                 (get-module-code (resolve-module-path mod #f)))])
-    (let ([syn (map contracted (extract-ids syn))]
-          [reg (extract-ids reg)])
-      `((syntax ,@syn) ,@(classify-ids reg)))))
-
 (define (startup)
  (thread update-module-cache)
  (void))
 
 (startup)
-
-;;; modules.rkt ends here

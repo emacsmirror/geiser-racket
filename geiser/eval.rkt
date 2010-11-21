@@ -12,14 +12,12 @@
 #lang racket
 
 (provide eval-in
-         compile-in
          load-file
-         compile-file
          macroexpand
          make-repl-reader)
 
 
-(require geiser/enter geiser/modules geiser/autodoc)
+(require geiser/enter geiser/modules)
 (require errortrace/errortrace-lib)
 
 (define last-result (void))
@@ -55,17 +53,11 @@
 (define (eval-in form spec lang)
   (write (call-with-result
           (lambda ()
-            (update-signature-cache spec form)
             (eval form (module-spec->namespace spec lang)))))
   (newline))
 
-(define compile-in eval-in)
-
 (define (load-file file)
-  (load-module file (current-output-port) (last-namespace))
-  (update-signature-cache file))
-
-(define compile-file load-file)
+  (load-module file (current-output-port) (last-namespace)))
 
 (define (macroexpand form . all)
   (let ([all (and (not (null? all)) (car all))])
