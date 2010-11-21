@@ -27,5 +27,3 @@
 
 (define (module-completions prefix)
   (filter-prefix prefix (module-list) #f))
-
-;;; completions.rkt ends here

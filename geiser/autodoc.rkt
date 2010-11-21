@@ -229,5 +229,6 @@
                 (module-compiled-exports
                  (get-module-code (resolve-module-path mod #f)))])
     (let ([syn (map contracted (extract-ids syn))]
-          [reg (extract-ids reg)])
-      `((syntax ,@syn) ,@(classify-ids reg)))))
+          [reg (extract-ids reg)]
+          [subm (map list (or (submodules mod) '()))])
+      `((syntax ,@syn) ,@(classify-ids reg) (modules ,@subm)))))

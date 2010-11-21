@@ -18,7 +18,8 @@
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
-         module-list)
+         module-list
+         submodules)
 
 (require srfi/13 geiser/enter)
 
@@ -71,8 +72,8 @@
                 [lens (map prefix-len cpaths)]
                 [real-path (substring path (apply max lens))])
            (if (absolute-path? real-path)
-               (call-with-values (lambda () (split-path path))
-                 (lambda (_ basename __) (path->string basename)))
+               (let-values ([(_ base __) (split-path path)])
+                 (path->string base))
                (regexp-replace "\\.[^./]*$" real-path "")))]
         ;; [(eq? path '#%kernel) "(kernel)"]
         [(string? path) path]
@@ -98,37 +99,75 @@
                 [len (- (string-length path) (bytes-length ext) 1)])
            (substring path 0 len)))))
 
-(define (visit-module-path path kind acc)
+(define main-rkt (build-path "main.rkt"))
+(define main-ss (build-path "main.ss"))
+
+(define ((visit-module-path reg?) path kind acc)
   (define (register e p)
-    (register-path (string->symbol e) (build-path (current-directory) p))
-    (cons e acc))
-  (define (find-main ext)
-    (let ([m (build-path path (string-append "main." ext))])
-      (and (file-exists? m) m)))
+    (when reg?
+      (register-path (string->symbol e) (build-path (current-directory) p)))
+    (values (cons e acc) reg?))
+  (define (get-main path main)
+    (and (file-exists? main) (build-path path main)))
+  (define (find-main path)
+    (parameterize ([current-directory path])
+      (or (get-main path main-rkt) (get-main path main-ss))))
   (case kind
     [(file) (let ([entry (path->entry path)])
               (if (not entry) acc (register entry path)))]
     [(dir) (cond [(skippable-dir? path) (values acc #f)]
-                 [(or (find-main "rkt") (find-main "ss")) =>
-                  (curry register (path->string path))]
-                 [else acc])]
+                 [(find-main path) => (curry register (path->string path))]
+                 [else (values acc reg?)])]
     [else acc]))
 
-(define (find-modules path acc)
+(define ((find-modules reg?) path acc)
   (if (directory-exists? path)
       (parameterize ([current-directory path])
-        (fold-files visit-module-path acc))
+        (fold-files (visit-module-path reg?) acc))
       acc))
 
+(define (take-while pred lst)
+  (let loop ([lst lst] [acc '()])
+    (cond [(null? lst) (reverse acc)]
+          [(pred (car lst)) (loop (cdr lst) (cons (car lst) acc))]
+          [else (reverse acc)])))
+
+(define (submodules mod)
+  (let* ([mod-name (if (symbol? mod) mod (get-mod mod))]
+         [mod-str (and (symbol? mod-name) (symbol->string mod-name))])
+    (if mod-str
+        (let ([ms (member mod-str (module-list))])
+          (and ms
+               (take-while (lambda (m) (string-prefix? mod-str m))
+                           (cdr ms))))
+        (find-submodules mod))))
+
+(define (find-submodules path)
+  (and (path-string? path)
+       (let-values ([(dir base ign) (split-path path)])
+         (and (or (equal? base main-rkt)
+                  (equal? base main-ss))
+              (map (lambda (m) (path->string (build-path dir m)))
+                   (remove "main" ((find-modules #f) dir '())))))))
+
 (define (known-modules)
-  (sort (foldl find-modules '() (current-library-collection-paths)) string<?))
+  (sort (foldl (find-modules #t)
+               '()
+               (current-library-collection-paths))
+        string<?))
 
 (define registered (make-hash))
+(define registered-paths (make-hash))
 
-(define (get-path mod) (hash-ref registered mod #f))
+(define (get-path mod)
+  (hash-ref registered mod #f))
+
+(define (get-mod path)
+  (hash-ref registered-paths path #f))
 
 (define (register-path mod path)
   (hash-set! registered mod path)
+  (hash-set! registered-paths path mod)
   path)
 
 (define module-cache #f)

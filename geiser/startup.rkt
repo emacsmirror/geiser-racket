@@ -1,4 +1,4 @@
-;;; geiser.rkt -- entry point
+;;; startup.rkt -- entry point
 
 ;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
 

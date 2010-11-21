@@ -16,7 +16,7 @@
 (require (for-syntax racket/base)
          mzlib/thread
          racket/tcp
-         geiser/main
+         geiser
          geiser/enter
          geiser/eval
          geiser/modules)
@@ -38,7 +38,7 @@
 (define geiser-loader (module-loader orig-loader))
 
 (define (geiser-eval)
-  (define geiser-main (module->namespace 'geiser/main))
+  (define geiser-main (module->namespace 'geiser))
   (let* ([mod (read)]
          [lang (read)]
          [form (read)])
