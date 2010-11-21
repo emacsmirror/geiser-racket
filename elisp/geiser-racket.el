@@ -79,13 +79,14 @@ This executable is used by `run-gracket', and, if
 This function uses `geiser-racket-init-file' if it exists."
   (let ((init-file (and (stringp geiser-racket-init-file)
                         (expand-file-name geiser-racket-init-file)))
-        (binary (geiser-racket--real-binary)))
+        (binary (geiser-racket--real-binary))
+        (rackdir (expand-file-name "racket/" geiser-scheme-dir)))
     `("-i" "-q"
-      "-S" ,(expand-file-name "racket/" geiser-scheme-dir)
+      "-S" ,rackdir
       ,@(apply 'append (mapcar (lambda (p) (list "-S" p)) geiser-racket-collects))
       ,@(and (listp binary) (cdr binary))
       ,@(and init-file (file-readable-p init-file) (list "-f" init-file))
-      "-f" ,(expand-file-name "racket/geiser.rkt" geiser-scheme-dir))))
+      "-f" ,(expand-file-name "geiser/startup.rkt" rackdir))))
 
 (defconst geiser-racket--prompt-regexp "\\(mzscheme\\|racket\\)@[^ ]*?> ")
 
