@@ -48,7 +48,7 @@
                                 (let* ([proc (eval (read) geiser-main)]
                                        [args (read)])
                                   (eval-in `(,proc ,@args) mod lang))]
-                               [else (eval-in form mod lang)])))))
+                               [else ((geiser:eval lang) form mod)])))))
 
 (define ((geiser-read prompt))
   (prompt)
