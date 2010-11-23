@@ -262,7 +262,7 @@ using start-geiser, a procedure in the geiser/server module."
   (exit-command geiser-racket--exit-command)
   (find-symbol-begin geiser-racket--symbol-begin)
   (display-error geiser-racket--display-error)
-  (display-help geiser-racket--external-help)
+  (external-help geiser-racket--external-help)
   (check-buffer geiser-racket--guess)
   (keywords geiser-racket--keywords)
   (binding-forms geiser-racket--binding-forms)
