@@ -14,8 +14,8 @@
 (provide symbol-location
          symbol-location*
          module-location
-         symbol-module-name
-         symbol-module-path-name)
+         symbol-module
+         symbol-module-name)
 
 (require geiser/utils geiser/modules)
 
@@ -42,13 +42,10 @@
         (make-location name path #f)
         (module-location sym))))
 
-(define symbol-module-path-name (compose cdr symbol-location*))
+(define symbol-module (compose cdr symbol-location*))
 
 (define symbol-module-name
-  (compose module-path-name->name symbol-module-path-name))
+  (compose module-path-name->name symbol-module))
 
 (define (module-location sym)
   (make-location sym (module-spec->path-name sym) 1))
-
-
-;;; locations.rkt ends here

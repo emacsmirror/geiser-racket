@@ -18,10 +18,14 @@
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
+         module-identifiers
          module-list
          submodules)
 
-(require srfi/13 geiser/enter)
+(require srfi/13
+         syntax/modcode
+         syntax/modresolve
+         geiser/enter)
 
 (define (ensure-module-spec spec)
   (cond [(symbol? spec) spec]
@@ -48,7 +52,7 @@
 
 (define (namespace->module-path-name ns)
   (let ([rmp (variable-reference->resolved-module-path
-              (eval '(#%variable-reference) ns))])
+              (eval '(#%variable-reference) (or ns (current-namespace))))])
     (and (resolved-module-path? rmp)
          (resolved-module-path-name rmp))))
 
@@ -57,7 +61,7 @@
        (or (get-path spec)
            (register-path spec
                           (namespace->module-path-name
-                           (module-spec->namespace spec) #f #f)))))
+                           (module-spec->namespace spec #f #f))))))
 
 (define (module-path-name->name path)
   (cond [(path? path)
@@ -82,6 +86,17 @@
 
 (define namespace->module-name
   (compose module-path-name->name namespace->module-path-name))
+
+(define (module-identifiers mod)
+  (define (extract-ids ls)
+    (append-map (lambda (idls)
+                  (map car (cdr idls)))
+                ls))
+  (let-values ([(reg syn)
+                (module-compiled-exports
+                 (get-module-code (resolve-module-path
+                                   (ensure-module-spec mod) #f)))])
+    (values (extract-ids reg) (extract-ids syn))))
 
 (define (skippable-dir? path)
   (call-with-values (lambda () (split-path path))

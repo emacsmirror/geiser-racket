@@ -11,19 +11,57 @@
 
 #lang racket
 
-(provide autodoc module-exports update-signature-cache get-help)
+(provide autodoc
+         symbol-documentation
+         module-exports
+         update-signature-cache
+         get-help)
 
 (require racket/help
-         syntax/modcode
-         syntax/modresolve
          geiser/utils
          geiser/modules
          geiser/locations)
 
 (define (get-help symbol mod)
-  (with-handlers ([exn? (lambda (_)
-                          (eval `(help ,symbol)))])
-    (eval `(help ,symbol #:from ,(ensure-module-spec mod)))))
+  (if (eq? symbol mod)
+      (get-mod-help mod)
+      (with-handlers ([exn? (lambda (_)
+                              (eval `(help ,symbol)))])
+        (eval `(help ,symbol #:from ,(ensure-module-spec mod))))))
+
+(define (get-mod-help mod)
+  (let-values ([(ids syns) (module-identifiers mod)])
+    (let ([sym (cond [(not (null? syns)) (car syns)]
+                     [(not (null? ids)) (car ids)]
+                     [else #f])])
+      (and sym (get-help sym mod)))))
+
+(define (symbol-documentation id)
+  (let* ([val (value id (symbol-module id))]
+         [sign (autodoc* id)])
+    (and sign
+         (list (cons 'signature (autodoc* id #f))
+               (cons 'docstring (docstring id val sign))))))
+
+(define (docstring id val sign)
+  (let* ([mod (assoc 'module (cdr sign))]
+         [mod (if mod (cdr mod) "<unknown>")])
+    (if val
+        (format "A ~a in module ~a.~a~a"
+                (if (procedure? val) "procedure" "variable")
+                mod
+                (if (procedure? val)
+                    ""
+                    (format "~%~%Value:~%~%  ~a" val))
+                (if (has-contract? val)
+                    (format "~%~%Contract:~%~%  ~a"
+                            (contract-name (value-contract val)))
+                    ""))
+        (format "A syntax object in module ~a." mod))))
+
+(define (value id mod)
+  (with-handlers ([exn? (const #f)])
+    (dynamic-require mod id (const #f))))
 
 (define (autodoc ids)
   (if (not (list? ids))
@@ -33,7 +71,8 @@
 (define (autodoc* id (extra #t))
   (define (val)
     (with-handlers ([exn? (const "")])
-      (format "~.a" (namespace-variable-value id))))
+      (parameterize ([error-print-width 60])
+        (format "~.a" (namespace-variable-value id)))))
   (and
    (symbol? id)
    (let* ([loc (symbol-location* id)]
@@ -201,11 +240,8 @@
     (hash-remove! signatures path)))
 
 (define (module-exports mod)
-  (define (value id)
-    (with-handlers ([exn? (const #f)])
-      (dynamic-require mod id (const #f))))
   (define (contracted id)
-    (let ([v (value id)])
+    (let ([v (value id mod)])
       (if (has-contract? v)
           (list id (cons 'info (contract-name (value-contract v))))
           (entry id))))
@@ -213,22 +249,15 @@
     (let ((sign (eval `(,autodoc* ',id #f)
                       (module-spec->namespace mod #f #f))))
       (if sign (list id (cons 'signature sign)) (list id))))
-  (define (extract-ids ls)
-    (append-map (lambda (idls)
-                  (map car (cdr idls)))
-                ls))
   (define (classify-ids ids)
     (let loop ([ids ids] [procs '()] [vars '()])
       (cond [(null? ids)
              `((procs ,@(map entry (reverse procs)))
                (vars ,@(map list (reverse vars))))]
-            [(procedure? (value (car ids)))
+            [(procedure? (value (car ids) mod))
              (loop (cdr ids) (cons (car ids) procs) vars)]
             [else (loop (cdr ids) procs (cons (car ids) vars))])))
-  (let-values ([(reg syn)
-                (module-compiled-exports
-                 (get-module-code (resolve-module-path mod #f)))])
-    (let ([syn (map contracted (extract-ids syn))]
-          [reg (extract-ids reg)]
-          [subm (map list (or (submodules mod) '()))])
-      `((syntax ,@syn) ,@(classify-ids reg) (modules ,@subm)))))
+  (let-values ([(ids syn) (module-identifiers mod)])
+    `(,@(classify-ids ids)
+      (syntax ,@(map contracted syn))
+      (modules ,@(map list (or (submodules mod) '()))))))
