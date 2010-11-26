@@ -144,7 +144,7 @@ This function uses `geiser-racket-init-file' if it exists."
         ((null module) (geiser-racket--implicit-module))
         ((symbolp module) module)
         ((and (stringp module) (file-name-absolute-p module)) module)
-        ((stringp module) (make-symbol module))
+        ((stringp module) (intern module))
         (t nil)))
 
 (defun geiser-racket--symbol-begin (module)
