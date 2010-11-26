@@ -178,7 +178,7 @@ This function uses `geiser-racket-init-file' if it exists."
    `(:eval (get-help ',symbol '(:module ,module)) geiser/autodoc)))
 
 (defun geiser-racket--external-help (id module)
-  (message "Requesting help for '%s'..." id)
+  (message "Looking up manual for '%s'..." id)
   (let ((out (geiser-eval--retort-output
               (geiser-racket--get-help id module))))
     (when (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
