@@ -30,9 +30,9 @@
         (cons sym #f))))
 
 (define (make-location name path line)
-  (list (cons 'name name)
-        (cons 'file (if (path? path) (path->string path) '()))
-        (cons 'line (or line '()))))
+  (list (cons "name" name)
+        (cons "file" (if (path? path) (path->string path) '()))
+        (cons "line" (or line '()))))
 
 (define (symbol-location sym)
   (let* ([loc (symbol-location* sym)]

@@ -40,11 +40,11 @@
   (let* ([val (value sym (symbol-module sym))]
          [sign (autodoc* sym)])
     (and sign
-         (list (cons 'signature (autodoc* sym #f))
-               (cons 'docstring (docstring sym val sign))))))
+         (list (cons "signature" (autodoc* sym #f))
+               (cons "docstring" (docstring sym val sign))))))
 
 (define (docstring sym val sign)
-  (let* ([mod (assoc 'module (cdr sign))]
+  (let* ([mod (assoc "module" (cdr sign))]
          [mod (if mod (cdr mod) "<unknown>")]
          [id (namespace-symbol->identifier sym)]
          [desc (if (identifier? id) (format "~%~%~a" (describe id sym)) "")])
@@ -118,26 +118,26 @@
           [path (cdr loc)]
           [sgns (and path (find-signatures path name id))]
           [value (if (and extra sgns (not (list? sgns)))
-                     (list (cons 'value (val)))
+                     (list (cons "value" (val)))
                      '())]
           [mod (if (and extra sgns path)
-                   (list (cons 'module
+                   (list (cons "module"
                                (module-path-name->name path)))
                    '())])
      (and sgns
           `(,id
-            (name . ,name)
-            (args ,@(if (list? sgns) (map format-signature sgns) '()))
+            ("name" . ,name)
+            ("args" ,@(if (list? sgns) (map format-signature sgns) '()))
             ,@value
             ,@mod)))))
 
 (define (format-signature sign)
   (if (signature? sign)
-      `((required ,@(signature-required sign))
-        (optional ,@(signature-optional sign)
-                  ,@(let ((rest (signature-rest sign)))
-                      (if rest (list "...") '())))
-        (key ,@(signature-keys sign)))
+      `(("required" ,@(signature-required sign))
+        ("optional" ,@(signature-optional sign)
+         ,@(let ((rest (signature-rest sign)))
+             (if rest (list "...") '())))
+        ("key" ,@(signature-keys sign)))
       '()))
 
 (define signatures (make-hash))
@@ -281,21 +281,21 @@
   (define (contracted id)
     (let ([v (value id mod)])
       (if (has-contract? v)
-          (list id (cons 'info (contract-name (value-contract v))))
+          (list id (cons "info" (contract-name (value-contract v))))
           (entry id))))
   (define (entry id)
     (let ((sign (eval `(,autodoc* ',id #f)
                       (module-spec->namespace mod #f #f))))
-      (if sign (list id (cons 'signature sign)) (list id))))
+      (if sign (list id (cons "signature" sign)) (list id))))
   (define (classify-ids ids)
     (let loop ([ids ids] [procs '()] [vars '()])
       (cond [(null? ids)
-             `((procs ,@(map entry (reverse procs)))
-               (vars ,@(map list (reverse vars))))]
+             `(("procs" ,@(map entry (reverse procs)))
+               ("vars" ,@(map list (reverse vars))))]
             [(procedure? (value (car ids) mod))
              (loop (cdr ids) (cons (car ids) procs) vars)]
             [else (loop (cdr ids) procs (cons (car ids) vars))])))
   (let-values ([(ids syn) (module-identifiers mod)])
     `(,@(classify-ids ids)
-      (syntax ,@(map contracted syn))
-      (modules ,@(map list (or (submodules mod) '()))))))
+      ("syntax" ,@(map contracted syn))
+      ("modules" ,@(map list (or (submodules mod) '()))))))
