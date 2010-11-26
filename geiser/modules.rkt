@@ -18,6 +18,7 @@
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
+         module-path-index->name
          module-identifiers
          module-list
          submodules)
@@ -83,6 +84,12 @@
         [(string? path) path]
         [(symbol? path) (symbol->string path)]
         [else ""]))
+
+(define (module-path-index->name mpi)
+  (let ([rmp (module-path-index-resolve mpi)])
+    (if (resolved-module-path? rmp)
+        (module-path-name->name (resolved-module-path-name rmp))
+        "<unknown module>")))
 
 (define namespace->module-name
   (compose module-path-name->name namespace->module-path-name))

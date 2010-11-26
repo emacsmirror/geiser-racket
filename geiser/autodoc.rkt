@@ -36,18 +36,20 @@
                      [else #f])])
       (and sym (get-help sym mod)))))
 
-(define (symbol-documentation id)
-  (let* ([val (value id (symbol-module id))]
-         [sign (autodoc* id)])
+(define (symbol-documentation sym)
+  (let* ([val (value sym (symbol-module sym))]
+         [sign (autodoc* sym)])
     (and sign
-         (list (cons 'signature (autodoc* id #f))
-               (cons 'docstring (docstring id val sign))))))
+         (list (cons 'signature (autodoc* sym #f))
+               (cons 'docstring (docstring sym val sign))))))
 
-(define (docstring id val sign)
+(define (docstring sym val sign)
   (let* ([mod (assoc 'module (cdr sign))]
-         [mod (if mod (cdr mod) "<unknown>")])
+         [mod (if mod (cdr mod) "<unknown>")]
+         [id (namespace-symbol->identifier sym)]
+         [desc (if (identifier? id) (format "~%~%~a" (describe id sym)) "")])
     (if val
-        (format "A ~a in module ~a.~a~a"
+        (format "A ~a in module ~a.~a~a~a"
                 (if (procedure? val) "procedure" "variable")
                 mod
                 (if (procedure? val)
@@ -56,8 +58,44 @@
                 (if (has-contract? val)
                     (format "~%~%Contract:~%~%  ~a"
                             (contract-name (value-contract val)))
-                    ""))
-        (format "A syntax object in module ~a." mod))))
+                    "")
+                desc)
+        (format "An identifier in module ~a.~a" mod desc))))
+
+;; Lifted from Eli's interactive.rkt
+(define (describe id s)
+  (define b (identifier-binding id))
+  (cond
+   [(not b) (format "`~s' is a toplevel (or unbound) identifier." s)]
+   [(eq? b 'lexical) (format "`~s' is a lexical identifier." s)]
+   [(or (not (list? b)) (not (= 7 (length b))))
+    "*** internal error, racket changed ***"]
+   [else
+    (let-values ([(source-mod source-id
+                   nominal-source-mod nominal-source-id
+                   source-phase import-phase
+                   nominal-export-phase)
+                  (apply values b)])
+      (let ([aliased (not (eq? s source-id))]
+            [for-syn (eqv? source-phase 1)]
+            [amod (not (equal? source-mod nominal-source-mod))]
+            [aid (not (eq? s nominal-source-id))])
+        (if (or aliased for-syn amod aid)
+            (string-append
+             "Defined"
+             (if for-syn " for syntax" "")
+             (if aliased (format " as `~s' " source-id) "")
+             (if amod
+                 (format " in module ~a\nand required~a in module ~a"
+                         (module-path-index->name source-mod)
+                         (if (eqv? import-phase 1) "-for-syntax" "")
+                         (module-path-index->name nominal-source-mod))
+                 "")
+             (if aid
+                 (format ",\nwhere it is defined as `~s'" nominal-source-id)
+                 "")
+             ".")
+            "")))]))
 
 (define (value id mod)
   (with-handlers ([exn? (const #f)])
