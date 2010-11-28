@@ -57,7 +57,8 @@ This executable is used by `run-gracket', and, if
   :group 'geiser-racket)
 
 (geiser-custom--defcustom geiser-racket-extra-keywords
-    '("define-syntax-rule" "unless" "when" "with-handlers")
+    '("define-syntax-rule" "provide" "require"
+      "unless" "when" "with-handlers")
   "Extra keywords highlighted in Racket buffers."
   :type '(repeat string)
   :group 'geiser-racket)
@@ -231,9 +232,10 @@ This function uses `geiser-racket-init-file' if it exists."
 
 ;;; Keywords
 (defun geiser-racket--keywords ()
-  (when geiser-racket-extra-keywords
-    `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
-       . 1))))
+  (cons '("^#lang\\>" . 0)
+        (when geiser-racket-extra-keywords
+          `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
+             . 1)))))
 
 
 ;;; Remote REPLs
