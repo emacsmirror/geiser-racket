@@ -84,7 +84,8 @@ This function uses `geiser-racket-init-file' if it exists."
         (rackdir (expand-file-name "racket/" geiser-scheme-dir)))
     `("-i" "-q"
       "-S" ,rackdir
-      ,@(apply 'append (mapcar (lambda (p) (list "-S" p)) geiser-racket-collects))
+      ,@(apply 'append (mapcar (lambda (p) (list "-S" p))
+                               geiser-racket-collects))
       ,@(and (listp binary) (cdr binary))
       ,@(and init-file (file-readable-p init-file) (list "-f" init-file))
       "-f" ,(expand-file-name "geiser/startup.rkt" rackdir))))
@@ -161,16 +162,17 @@ This function uses `geiser-racket-init-file' if it exists."
   (get-buffer-process (current-buffer)))
 
 (defconst geiser-racket--binding-forms
-  '(for for/list for/hash for/hasheq for/and for/or
-    for/lists for/first for/last for/fold
-    for: for/list: for/hash: for/hasheq: for/and: for/or:
-    for/lists: for/first: for/last: for/fold:))
+  '("for" "for/list" "for/hash" "for/hasheq" "for/and" "for/or"
+    "for/lists" "for/first" "for/last" "for/fold"
+    "for:" "for/list:" "for/hash:" "for/hasheq:" "for/and:" "for/or:"
+    "for/lists:" "for/first:" "for/last:" "for/fold:"
+    "define-syntax-rule"))
 
 (defconst geiser-racket--binding-forms*
-  '(for* for*/list for*/lists for*/hash for*/hasheq for*/and
-    for*/or for*/first for*/last for*/fold
-    for*: for*/list: for*/lists: for*/hash: for*/hasheq: for*/and:
-    for*/or: for*/first: for*/last: for*/fold:))
+  '("for*" "for*/list" "for*/lists" "for*/hash" "for*/hasheq" "for*/and"
+    "for*/or" "for*/first" "for*/last" "for*/fold"
+    "for*:" "for*/list:" "for*/lists:" "for*/hash:" "for*/hasheq:" "for*/and:"
+    "for*/or:" "for*/first:" "for*/last:" "for*/fold:"))
 
 ;;; External help
 
