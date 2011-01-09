@@ -1,6 +1,6 @@
 ;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -106,7 +106,7 @@ This function uses `geiser-racket-init-file' if it exists."
 (defun geiser-racket--enter-command (module)
   (when (stringp module)
     (cond ((zerop (length module)) ",enter #f")
-          ((file-name-absolute-p module) (format ",enter (file %S)" module))
+          ((file-name-absolute-p module) (format ",enter %S" module))
           (t (format ",enter %s" module)))))
 
 (defun geiser-racket--geiser-procedure (proc &rest args)
