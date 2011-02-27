@@ -1,6 +1,6 @@
 ;;; modules.rkt -- module metadata
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -51,11 +51,16 @@
     (when (namespace? ns)
       (current-namespace ns))))
 
-(define (namespace->module-path-name ns)
-  (let ([rmp (variable-reference->resolved-module-path
-              (eval '(#%variable-reference) (or ns (current-namespace))))])
-    (and (resolved-module-path? rmp)
-         (resolved-module-path-name rmp))))
+(define (namespace->rmp ns)
+  (with-handlers ([exn? (const #f)])
+    (variable-reference->resolved-module-path
+     (eval '(#%variable-reference) (or ns (current-namespace))))))
+
+(define (namespace->module-path-name ns (p #f))
+  (let ([rmp (namespace->rmp ns)])
+    (or (and (resolved-module-path? rmp)
+             (resolved-module-path-name rmp))
+        p)))
 
 (define (module-spec->path-name spec)
   (and (symbol? spec)
@@ -64,10 +69,13 @@
                           (namespace->module-path-name
                            (module-spec->namespace spec #f #f))))))
 
+(define unknown-module-name "*unresolved module*")
+
 (define (module-path-name->name path)
-  (cond [(path? path)
-         (let* ([path (path->string path)]
-                [cpaths (map (compose path->string path->directory-path)
+  (cond [(path? path) (module-path-name->name (path->string path))]
+        ;; [(eq? path '#%kernel) "(kernel)"]
+        [(string? path)
+         (let* ([cpaths (map (compose path->string path->directory-path)
                              (current-library-collection-paths))]
                 [prefix-len (lambda (p)
                               (let ((pl (string-length p)))
@@ -80,19 +88,17 @@
                (let-values ([(_ base __) (split-path path)])
                  (path->string base))
                (regexp-replace "\\.[^./]*$" real-path "")))]
-        ;; [(eq? path '#%kernel) "(kernel)"]
-        [(string? path) path]
         [(symbol? path) (symbol->string path)]
-        [else ""]))
+        [else unknown-module-name]))
 
 (define (module-path-index->name mpi)
   (let ([rmp (module-path-index-resolve mpi)])
     (if (resolved-module-path? rmp)
         (module-path-name->name (resolved-module-path-name rmp))
-        "<unknown module>")))
+        unknown-module-name)))
 
-(define namespace->module-name
-  (compose module-path-name->name namespace->module-path-name))
+(define (namespace->module-name ns (p #f))
+  (module-path-name->name (namespace->module-path-name ns p)))
 
 (define (module-identifiers mod)
   (define (extract-ids ls)

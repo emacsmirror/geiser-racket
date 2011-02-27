@@ -22,13 +22,23 @@
          geiser/modules)
 
 (define top-namespace (current-namespace))
+(define last-entered (make-parameter ""))
+
+(define (do-enter mod name)
+  (enter-module mod)
+  (current-namespace (module->namespace mod))
+  (last-entered name))
 
 (define (enter! mod stx)
-  (cond [(not mod) (current-namespace top-namespace)]
-        [(module-path? mod)
-         (enter-module mod)
-         (current-namespace (module->namespace mod))]
-        [(path-string? mod) (enter! `(file ,mod) stx)]
+  (cond [(not mod)
+         (current-namespace top-namespace)
+         (last-entered "")]
+        [(symbol? mod) (do-enter mod (symbol->string mod))]
+        [(and (list? mod)
+              (= 2 (length mod))
+              (eq? 'file (car mod))
+              (path-string? (cadr mod))) (do-enter mod (cadr mod))]
+        [(path-string? mod) (do-enter `(file ,mod) mod)]
         [else (raise-syntax-error
                #f
                "not a valid module path, and not #f"
@@ -68,7 +78,8 @@
 
 (define geiser-prompt
   (lambda ()
-    (printf "racket@~a> " (namespace->module-name (current-namespace)))))
+    (printf "racket@~a> "
+            (namespace->module-name (current-namespace) (last-entered)))))
 
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
