@@ -73,6 +73,7 @@
          [(enter) (enter! (read) #'cmd)]
          [(geiser-eval) (geiser-eval)]
          [(geiser-no-values) (datum->syntax #f (void))]
+         [(add-to-load-path) (add-to-load-path (read))]
          [else form])]
       [_ form])))
 

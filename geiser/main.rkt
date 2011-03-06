@@ -1,6 +1,6 @@
 ;;; main.rkt -- exported interface for emacs
 
-;; Copyright (C) 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -44,7 +44,7 @@
   (load-file file))
 
 (define geiser:compile-file geiser:load-file)
-
+(define geiser:add-to-load-path add-to-load-path)
 (define geiser:autodoc autodoc)
 (define geiser:help get-help)
 (define geiser:completions symbol-completions)
@@ -55,5 +55,3 @@
 (define geiser:macroexpand macroexpand)
 (define geiser:symbol-documentation symbol-documentation)
 (define (geiser:no-values) (values))
-
-;;; main.rkt ends here

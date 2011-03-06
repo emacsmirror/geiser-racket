@@ -1,6 +1,6 @@
 ;;; eval.rkt -- evaluation
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -14,6 +14,7 @@
 (provide eval-in
          load-file
          macroexpand
+         add-to-load-path
          make-repl-reader)
 
 
@@ -64,6 +65,15 @@
     (with-output-to-string
       (lambda ()
         (pretty-print (syntax->datum ((if all expand expand-once) form)))))))
+
+(define (add-to-load-path p)
+  (when (string? p)
+    (let ([p (string->path p)]
+          [cps (current-library-collection-paths)])
+      (unless (member p cps)
+        (current-library-collection-paths
+         (cons p cps)))))
+  #t)
 
 (define (make-repl-reader reader)
   (lambda ()
