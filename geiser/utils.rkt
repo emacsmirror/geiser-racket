@@ -15,8 +15,6 @@
          keyword->symbol
          symbol->keyword)
 
-(require racket/mpair)
-
 (define (pair->list pair)
   (let loop ([d pair] [s '()])
     (cond [(null? d) (reverse s)]
