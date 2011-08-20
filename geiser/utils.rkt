@@ -15,6 +15,8 @@
          keyword->symbol
          symbol->keyword)
 
+(require racket/mpair)
+
 (define (pair->list pair)
   (let loop ([d pair] [s '()])
     (cond [(null? d) (reverse s)]
@@ -23,5 +25,3 @@
 
 (define keyword->symbol (compose string->symbol keyword->string))
 (define (symbol->keyword sym) (string->keyword (format "~a" sym)))
-
-;;; utils.rkt ends here

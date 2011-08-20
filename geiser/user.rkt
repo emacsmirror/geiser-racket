@@ -50,15 +50,17 @@
 
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser))
+  (define (eval-here form) (eval form geiser-main))
   (let* ([mod (read)]
          [lang (read)]
          [form (read)])
     (datum->syntax #f
                    (list 'quote
                          (cond [(equal? form '(unquote apply))
-                                (let* ([proc (eval (read) geiser-main)]
-                                       [args (read)])
-                                  (eval-in `(,proc ,@args) mod lang))]
+                                (let* ([proc (eval-here (read))]
+                                       [args (map eval-here (read))]
+                                       [ev (lambda () (apply proc args))])
+                                  (eval-in `(,ev) mod lang))]
                                [else ((geiser:eval lang) form mod)])))))
 
 (define ((geiser-read prompt))
