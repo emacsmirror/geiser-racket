@@ -232,12 +232,24 @@ This function uses `geiser-racket-init-file' if it exists."
       (geiser-racket--explicit-module)))
 
 
-;;; Keywords
+;;; Keywords and syntax
 (defun geiser-racket--keywords ()
   (cons '("^#lang\\>" . 0)
         (when geiser-racket-extra-keywords
           `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
              . 1)))))
+
+(geiser-syntax--scheme-indent
+ (splicing-let 1)
+ (splicing-letrec 1)
+ (splicing-let-values 1)
+ (splicing-letrec-values 1)
+ (splicing-let-syntax 1)
+ (splicing-letrec-syntax 1)
+ (splicing-let-syntaxes 1)
+ (splicing-letrec-syntaxes 1)
+ (splicing-letrec-syntaxes+values 1)
+ (splicing-local 1))
 
 
 ;;; Remote REPLs
