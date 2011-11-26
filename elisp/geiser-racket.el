@@ -213,13 +213,12 @@ This function uses `geiser-racket-init-file' if it exists."
   (when msg
     (let ((p (point)))
       (insert msg)
-      (when key
-        (let ((end (point)))
+      (let ((end (point)))
         (goto-char p)
-        (geiser-racket--purge-trace)
+        (when key (geiser-racket--purge-trace))
         (mapc 'geiser-edit--buttonize-files geiser-racket--file-rxs)
         (goto-char end)
-        (newline)))))
+        (newline))))
   (or key (not (zerop (length msg)))))
 
 
