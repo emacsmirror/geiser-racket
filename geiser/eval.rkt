@@ -47,8 +47,9 @@
   (let ([output
          (with-output-to-string
            (lambda ()
-             (with-handlers ([exn? set-last-error])
-               (call-with-values thunk set-last-result))))])
+             (parameterize ([current-error-port (current-output-port)])
+               (with-handlers ([exn? set-last-error])
+                 (call-with-values thunk set-last-result)))))])
     (append last-result `((output . ,output)))))
 
 (define (eval-in form spec lang)
