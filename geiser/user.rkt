@@ -1,6 +1,6 @@
 ;;; user.rkt -- global bindings visible to geiser users
 
-;; Copyright (C) 2010, 2011 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2011, 2012 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -76,6 +76,7 @@
          [(geiser-eval) (geiser-eval)]
          [(geiser-no-values) (datum->syntax #f (void))]
          [(add-to-load-path) (add-to-load-path (read))]
+         [(cd) (current-directory (read))]
          [else form])]
       [_ form])))
 

@@ -1,6 +1,6 @@
 ;;; enter.rkt -- custom module loaders
 
-;; Copyright (C) 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2012 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -138,5 +138,3 @@
                           ((enter-load/use-compiled orig #t)
                            path
                            (mod-name mod)))))))))))))))
-
-;;; enter.rkt ends here
