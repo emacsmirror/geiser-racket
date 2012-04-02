@@ -1,6 +1,6 @@
 ;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -233,10 +233,11 @@ This function uses `geiser-racket-init-file' if it exists."
 
 ;;; Keywords and syntax
 (defun geiser-racket--keywords ()
-  (cons '("^#lang\\>" . 0)
-        (when geiser-racket-extra-keywords
-          `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
-             . 1)))))
+  (append '(("^#lang\\>" . 0)
+            ("\\[\\(else\\)\\>" . 1))
+          (when geiser-racket-extra-keywords
+            `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
+               . 1)))))
 
 (geiser-syntax--scheme-indent
  (splicing-let 1)
