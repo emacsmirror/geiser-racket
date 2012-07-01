@@ -85,12 +85,13 @@
                           (current-continuation-marks))))
   (if name
       ;; Module load:
-      (let ([code (get-module-code path "compiled" compile
-                                   (lambda (ext loader?)
-                                     (load-extension ext)
-                                     #f)
-                                   #:notify (lambda (chosen)
-                                              (notify re? chosen)))]
+      (let ([code (get-module-code
+                   path "compiled"
+                   (lambda (e)
+                     (parameterize ([compile-enforce-module-constants #f])
+                       (compile e)))
+                   (lambda (ext loader?) (load-extension ext) #f)
+                   #:notify (lambda (chosen) (notify re? chosen)))]
             [path (normal-case-path
                    (simplify-path
                     (path->complete-path path
@@ -107,7 +108,8 @@
                           null))])
           (add-paths! m (resolve-paths path)))
         ;; Evaluate the module:
-        (eval code))
+        (parameterize ([current-module-declare-source path])
+          (eval code)))
       ;; Not a module:
       (begin
         (notify re? path)
