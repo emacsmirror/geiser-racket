@@ -79,6 +79,9 @@
          [(geiser-eval) (geiser-eval)]
          [(geiser-no-values) (datum->syntax #f (void))]
          [(add-to-load-path) (add-to-load-path (read))]
+         [(set-image-cache) (image-cache (read))]
+         [(image-cache) (image-cache)]
+         [(gcd) (current-directory)]
          [(cd) (current-directory (read))]
          [else form])]
       [_ form])))
@@ -88,12 +91,18 @@
     (printf "racket@~a> "
             (namespace->module-name (current-namespace) (last-entered)))))
 
+(define image-cache
+  (let ([ensure-dir (lambda (dir)
+                      (and (path-string? dir)
+                           (begin (make-directory* dir) dir)))])
+    (make-parameter #f ensure-dir)))
+
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
 
 (define (geiser-save-tmpimage imgbytes)
   ;; Save imgbytes to a new temporary file and return the filename
-  (define filename (make-temporary-file "geiser-img-~a.png"))
+  (define filename (make-temporary-file "geiser-img-~a.png" #f (image-cache)))
   (with-output-to-file filename #:exists 'truncate
     (lambda () (display imgbytes)))
   filename)
