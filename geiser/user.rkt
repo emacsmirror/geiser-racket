@@ -93,9 +93,11 @@
 
 (define image-cache
   (let ([ensure-dir (lambda (dir)
-                      (and (path-string? dir)
-                           (begin (make-directory* dir) dir)))])
-    (make-parameter #f ensure-dir)))
+                      (if (path-string? dir)
+                          (begin (make-directory* dir)
+                                 (if (path? dir) (path->string dir) dir))
+                          (path->string (find-system-path 'temp-dir))))])
+    (make-parameter (ensure-dir #f) ensure-dir)))
 
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
