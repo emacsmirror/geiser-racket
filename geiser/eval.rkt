@@ -1,6 +1,6 @@
 ;;; eval.rkt -- evaluation
 
-;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -18,7 +18,7 @@
          make-repl-reader)
 
 
-(require geiser/enter geiser/modules)
+(require geiser/enter geiser/modules geiser/images)
 (require errortrace/errortrace-lib)
 
 (define last-result (void))
@@ -37,10 +37,10 @@
 
 (define (write-value v)
   (with-output-to-string
-    (lambda () (write v))))
+    (lambda () (maybe-write-image v))))
 
 (define (set-last-result . vs)
-  (set! last-result `((result  ,@(map write-value vs)))))
+  (set! last-result `((result ,@(map write-value vs)))))
 
 (define (call-with-result thunk)
   (set-last-result (void))
