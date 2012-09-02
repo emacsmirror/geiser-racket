@@ -121,7 +121,7 @@
                   (values -inf.0 path)))
             (values -inf.0 path)))))
 
-(define (check-latest mod flags)
+(define (check-latest mod)
   (define mpi (module-path-index-join mod #f))
   (define done (make-hash))
   (let loop ([mpi mpi])
@@ -139,8 +139,8 @@
           (when (ts . > . (mod-timestamp mod))
             (define orig (current-load/use-compiled))
             (parameterize ([current-load/use-compiled
-                            (enter-load/use-compiled orig #f flags)]
+                            (enter-load/use-compiled orig #f)]
                            [current-module-declare-name rpath]
                            [current-module-declare-source actual-path])
-              ((enter-load/use-compiled orig #t flags)
+              ((enter-load/use-compiled orig #t)
                npath (mod-name mod)))))))))
