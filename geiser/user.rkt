@@ -110,18 +110,18 @@
 
 (define server-channel (make-channel))
 
-(define (run-geiser-server port enforce-module-constants)
+(define (run-geiser-server port enforce-module-constants (hostname #f))
   (run-server port
               (lambda (in out)
                 (run-geiser-repl in out enforce-module-constants))
               #f
               void
               (lambda (p _ __)
-                (let ([lsner (tcp-listen p)])
+                (let ([lsner (tcp-listen p 4 #f hostname)])
                   (let-values ([(_ p __ ___) (tcp-addresses lsner #t)])
                     (channel-put server-channel p)
                     lsner)))))
 
-(define (start-geiser (port 0) (enforce-module-constants #f))
-  (thread (lambda () (run-geiser-server port enforce-module-constants)))
+(define (start-geiser (port 0) (hostname #f) (enforce-module-constants #f))
+  (thread (lambda () (run-geiser-server port enforce-module-constants hostname)))
   (channel-get server-channel))
