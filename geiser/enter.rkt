@@ -88,7 +88,7 @@
 (define ((enter-load/use-compiled orig re?) path name)
   (when (inhibit-eval)
     (raise (make-exn:fail "namespace not found" (current-continuation-marks))))
-  (if name
+  (if (and name (or (not (list? name)) (car name))) ;; submodule names are lists
       ;; Module load:
       (let* ([code (get-module-code
                     path "compiled"
@@ -102,7 +102,7 @@
              [path (normal-case-path (simplify-path path))])
         (define-values (ts real-path) (get-timestamp path))
         (add-paths! (make-mod name path ts code) (resolve-paths path))
-        (parameterize ([current-module-declare-source path]) (eval code)))
+        (parameterize ([current-module-declare-source real-path]) (eval code)))
       ;; Not a module:
       (begin (notify re? path) (orig path name))))
 
@@ -142,5 +142,4 @@
                             (enter-load/use-compiled orig #f)]
                            [current-module-declare-name rpath]
                            [current-module-declare-source actual-path])
-              ((enter-load/use-compiled orig #t)
-               npath (mod-name mod)))))))))
+              ((enter-load/use-compiled orig #t) npath (mod-name mod)))))))))
