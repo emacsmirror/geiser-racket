@@ -298,7 +298,8 @@ using start-geiser, a procedure in the geiser/server module."
  (for*/or 1)
  (for*/product 1)
  (for*/sum 1)
- (for*/vector 1))
+ (for*/vector 1)
+ (module+ defun))
 
 
 
