@@ -306,6 +306,7 @@ using start-geiser, a procedure in the geiser/server module."
  (let: 1)
  (letrec-values: 1)
  (letrec: 1)
+ (local 1)
  (mixin 2)
  (module defun)
  (module+ defun)
