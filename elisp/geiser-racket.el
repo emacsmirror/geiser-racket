@@ -1,6 +1,6 @@
 ;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -323,6 +323,7 @@ using start-geiser, a procedure in the geiser/server module."
  (splicing-letrec-syntaxes+values 1)
  (splicing-letrec-values 1)
  (splicing-local 1)
+ (struct 1)
  (syntax-id-rules defun)
  (syntax/loc 1)
  (type-case defun)
