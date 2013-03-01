@@ -65,6 +65,11 @@ This executable is used by `run-gracket', and, if
   :type '(repeat string)
   :group 'geiser-racket)
 
+(geiser-custom--defcustom geiser-racket-case-sensitive-p t
+  "Non-nil means keyword highlighting is case-sensitive."
+  :type 'boolean
+  :group 'geiser-racket)
+
 
 ;;; REPL support:
 
@@ -353,6 +358,7 @@ using start-geiser, a procedure in the geiser/server module."
   (external-help geiser-racket--external-help)
   (check-buffer geiser-racket--guess)
   (keywords geiser-racket--keywords)
+  (case-sensitive geiser-racket-case-sensitive-p)
   (binding-forms geiser-racket--binding-forms)
   (binding-forms* geiser-racket--binding-forms*))
 
