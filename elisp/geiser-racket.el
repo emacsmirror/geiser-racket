@@ -97,7 +97,7 @@ This function uses `geiser-racket-init-file' if it exists."
       ,@(and init-file (file-readable-p init-file) (list "-f" init-file))
       "-f" ,(expand-file-name "geiser/startup.rkt" rackdir))))
 
-(defconst geiser-racket--prompt-regexp "\\(mzscheme\\|racket\\)@.*> ")
+(defconst geiser-racket--prompt-regexp "\\(mzscheme\\|racket\\)@[^ ]*> ")
 
 (defun geiser-racket--startup (remote)
   (if geiser-image-cache-dir
