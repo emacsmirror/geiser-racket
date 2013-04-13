@@ -1,6 +1,6 @@
 ;;; user.rkt -- global bindings visible to geiser users
 
-;; Copyright (C) 2010, 2011, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -87,8 +87,8 @@
 
 (define geiser-prompt
   (lambda ()
-    (printf "racket@~a> "
-            (namespace->module-name (current-namespace) (last-entered)))))
+    (let ([m (namespace->module-name (current-namespace) (last-entered))])
+      (printf "racket@~a> " (regexp-replace* " " m "_")))))
 
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
