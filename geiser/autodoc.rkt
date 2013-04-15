@@ -22,11 +22,13 @@
          geiser/modules
          geiser/locations)
 
+(define here (current-namespace))
+
 (define (get-help symbol mod)
   (if (eq? symbol mod)
       (get-mod-help mod)
-      (with-handlers ([exn? (lambda (_) (eval `(help ,symbol)))])
-        (eval `(help ,symbol #:from ,(ensure-module-spec mod))))))
+      (with-handlers ([exn? (lambda (_) (eval `(help ,symbol) here))])
+        (eval `(help ,symbol #:from ,(ensure-module-spec mod)) here))))
 
 (define (get-mod-help mod)
   (let-values ([(ids syns) (module-identifiers mod)])
