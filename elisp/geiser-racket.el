@@ -202,7 +202,7 @@ using start-geiser, a procedure in the geiser/server module."
 ;;; External help
 
 (defsubst geiser-racket--get-help (symbol module)
-  (geiser-eval--send/wait `(:scm ,(format ",help %s %s" symbol module))))
+  (geiser-eval--send/wait `(:scm ,(format ",help %s %S" symbol module))))
 
 (defun geiser-racket--external-help (id module)
   (message "Looking up manual for '%s'..." id)
@@ -210,9 +210,10 @@ using start-geiser, a procedure in the geiser/server module."
          (out (geiser-eval--retort-output ret))
          (ret (if (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
                   (geiser-racket--get-help id (match-string 1 out))
-                ret))
-         (msg (if (geiser-eval--retort-error ret) "not found" "done")))
-    (minibuffer-message "%s %s" (current-message) msg)
+                ret)))
+    (unless (string-match "^Sending to web browser.+"
+                          (geiser-eval--retort-output ret))
+      (minibuffer-message "%s not found" (current-message)))
     t))
 
 
