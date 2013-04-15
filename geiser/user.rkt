@@ -96,10 +96,6 @@
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
 
-(define (preload-help)
-  (thread (lambda ()
-            (with-output-to-string (lambda () (help meh-i-dont-exist))))))
-
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
   (current-load/use-compiled geiser-loader)
