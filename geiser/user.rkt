@@ -115,6 +115,7 @@
                  (current-load/use-compiled geiser-loader)
                  (current-prompt-read (geiser-prompt-read geiser-prompt))
                  (current-print maybe-print-image)]
+    (preload-help)
     (read-eval-print-loop)))
 
 (define server-channel (make-channel))
