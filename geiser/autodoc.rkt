@@ -1,6 +1,6 @@
 ;;; autodoc.rkt -- suport for autodoc echo
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -25,8 +25,7 @@
 (define (get-help symbol mod)
   (if (eq? symbol mod)
       (get-mod-help mod)
-      (with-handlers ([exn? (lambda (_)
-                              (eval `(help ,symbol)))])
+      (with-handlers ([exn? (lambda (_) (eval `(help ,symbol)))])
         (eval `(help ,symbol #:from ,(ensure-module-spec mod))))))
 
 (define (get-mod-help mod)

@@ -9,14 +9,16 @@
 
 ;; Start date: Wed Mar 31, 2010 22:24
 
-#lang racket/base
+#lang racket
 
 (provide init-geiser-repl run-geiser-server start-geiser)
 
 (require (for-syntax racket/base)
          mzlib/thread
          racket/tcp
+         racket/help
          geiser
+         geiser/autodoc
          geiser/images
          geiser/enter
          geiser/eval
@@ -79,6 +81,7 @@
          [(geiser-no-values) (datum->syntax #f (void))]
          [(add-to-load-path) (add-to-load-path (read))]
          [(set-image-cache) (image-cache (read))]
+         [(help) (get-help (read) (read))]
          [(image-cache) (image-cache)]
          [(gcd) (current-directory)]
          [(cd) (current-directory (read))]
@@ -93,9 +96,14 @@
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
 
+(define (preload-help)
+  (thread (lambda ()
+            (with-output-to-string (lambda () (help meh-i-dont-exist))))))
+
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
   (current-load/use-compiled geiser-loader)
+  (preload-help)
   (current-prompt-read (geiser-prompt-read geiser-prompt))
   (current-print maybe-print-image))
 
@@ -124,5 +132,6 @@
                     lsner)))))
 
 (define (start-geiser (port 0) (hostname #f) (enforce-module-constants #f))
-  (thread (lambda () (run-geiser-server port enforce-module-constants hostname)))
+  (thread (lambda ()
+            (run-geiser-server port enforce-module-constants hostname)))
   (channel-get server-channel))
