@@ -89,8 +89,7 @@ This function uses `geiser-racket-init-file' if it exists."
                         (expand-file-name geiser-racket-init-file)))
         (binary (geiser-racket--real-binary))
         (rackdir (expand-file-name "racket/" geiser-scheme-dir)))
-    `("-i" "-q"
-      "-S" ,rackdir
+    `("-i" "-q" "-S" ,rackdir
       ,@(apply 'append (mapcar (lambda (p) (list "-S" p))
                                geiser-racket-collects))
       ,@(and (listp binary) (cdr binary))
@@ -203,17 +202,18 @@ using start-geiser, a procedure in the geiser/server module."
 ;;; External help
 
 (defsubst geiser-racket--get-help (symbol module)
-  (geiser-eval--send/wait
-   `(:eval (get-help ',symbol '(:module ,module)) geiser/autodoc)))
+  (geiser-eval--send/wait `(:scm ,(format ",help %s %s" symbol module))))
 
 (defun geiser-racket--external-help (id module)
   (message "Looking up manual for '%s'..." id)
-  (let ((out (geiser-eval--retort-output
-              (geiser-racket--get-help id module))))
-    (when (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
-      (geiser-racket--get-help id (match-string 1 out))))
-  (minibuffer-message "%s done" (current-message))
-  t)
+  (let* ((ret (geiser-racket--get-help id module))
+         (out (geiser-eval--retort-output ret))
+         (ret (if (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
+                  (geiser-racket--get-help id (match-string 1 out))
+                ret))
+         (msg (if (geiser-eval--retort-error ret) "not found" "done")))
+    (minibuffer-message "%s %s" (current-message) msg)
+    t))
 
 
 ;;; Error display
