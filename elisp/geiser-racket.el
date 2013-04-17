@@ -202,11 +202,11 @@ using start-geiser, a procedure in the geiser/server module."
 ;;; External help
 
 (defsubst geiser-racket--get-help (symbol module)
-  (geiser-eval--send/wait `(:scm ,(format ",help %s %S" symbol module))))
+  (geiser-eval--send/wait `(:scm ,(format ",help %s %s" symbol module))))
 
 (defun geiser-racket--external-help (id module)
   (message "Looking up manual for '%s'..." id)
-  (let* ((ret (geiser-racket--get-help id module))
+  (let* ((ret (geiser-racket--get-help id (format "%S" module)))
          (out (geiser-eval--retort-output ret))
          (ret (if (and out (string-match " but provided by:\n +\\(.+\\)\n" out))
                   (geiser-racket--get-help id (match-string 1 out))
