@@ -98,13 +98,6 @@ This function uses `geiser-racket-init-file' if it exists."
 
 (defconst geiser-racket--prompt-regexp "\\(mzscheme\\|racket\\)@[^ ]*> ")
 
-(defun geiser-racket--startup (remote)
-  (if geiser-image-cache-dir
-      (geiser-eval--send/wait
-       `(:eval (image-cache ,geiser-image-cache-dir) geiser/user))
-    (setq geiser-image-cache-dir
-          (geiser-eval--send/result '(:eval (image-cache) geiser/user)))))
-
 
 ;;; Remote REPLs
 
@@ -345,6 +338,19 @@ using start-geiser, a procedure in the geiser/server module."
  (unit/sig 2)
  (with-handlers 1)
  (with-handlers: 1))
+
+
+;;; Startup
+
+(defun geiser-racket--startup (remote)
+  (set (make-local-variable 'compilation-error-regexp-alist)
+       `(("^ *\\([^:(\t\n]+\\):\\([0-9]+\\):\\([0-9]+\\):" 1 2 3)))
+  (compilation-setup t)
+  (if geiser-image-cache-dir
+      (geiser-eval--send/wait
+       `(:eval (image-cache ,geiser-image-cache-dir) geiser/user))
+    (setq geiser-image-cache-dir
+          (geiser-eval--send/result '(:eval (image-cache) geiser/user)))))
 
 
 
