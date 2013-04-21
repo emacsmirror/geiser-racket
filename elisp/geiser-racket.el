@@ -225,7 +225,7 @@ using start-geiser, a procedure in the geiser/server module."
     "module: \"\\([^>\"\n]+\\)\""))
 
 (defconst geiser-racket--geiser-file-rx
-  (format "^%s/?racket/geiser" (regexp-quote geiser-scheme-dir)))
+  (format "^ *%s/?racket/geiser" (regexp-quote geiser-scheme-dir)))
 
 (defun geiser-racket--purge-trace ()
   (save-excursion
