@@ -253,9 +253,15 @@ using start-geiser, a procedure in the geiser/server module."
 
 ;;; Keywords and syntax
 
+(setq geiser-racket-font-lock-forms
+  '(("^#lang\\>" . 0)
+    ("\\[\\(else\\)\\>" . 1)
+    ("(\\(define/match\\) +\\(\\w+\\)+\\b"
+     (1 font-lock-keyword-face)
+     (2 font-lock-function-name-face))))
+
 (defun geiser-racket--keywords ()
-  (append '(("^#lang\\>" . 0)
-            ("\\[\\(else\\)\\>" . 1))
+  (append geiser-racket-font-lock-forms
           (when geiser-racket-extra-keywords
             `((,(format "[[(]%s\\>" (regexp-opt geiser-racket-extra-keywords 1))
                . 1)))))
