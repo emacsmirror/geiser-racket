@@ -256,7 +256,7 @@ using start-geiser, a procedure in the geiser/server module."
 (setq geiser-racket-font-lock-forms
   '(("^#lang\\>" . 0)
     ("\\[\\(else\\)\\>" . 1)
-    ("(\\(define/match\\) +(?\\(\\w+\\)+\\b"
+    ("(\\(define/match\\)\\W+[[(]?\\(\\w+\\)+\\b"
      (1 font-lock-keyword-face)
      (2 font-lock-function-name-face))))
 
