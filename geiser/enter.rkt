@@ -84,25 +84,34 @@
 (define (notify re? path)
   (when re? (fprintf (current-error-port) " [re-loading ~a]\n" path)))
 
+(define (module-name? name)
+  (and name (not (and (pair? name) (not (car name))))))
+
 (define ((enter-load/use-compiled orig re?) path name)
   (when (inhibit-eval)
     (raise (make-exn:fail "namespace not found" (current-continuation-marks))))
-  ;; (printf "Loading ~s: ~s~%" name path)
-  (if (and name (not (list? name)))
+  (printf "Loading ~s: ~s~%" name path)
+  (if (module-name? name)
       ;; Module load:
-      (let* ([code (get-module-code
-                    path "compiled"
-                    (lambda (e)
-                      (parameterize ([compile-enforce-module-constants #f])
-                        (compile e)))
-                    (lambda (ext loader?) (load-extension ext) #f)
-                    #:notify (lambda (chosen) (notify re? chosen)))]
-             [dir (or (current-load-relative-directory) (current-directory))]
-             [path (path->complete-path path dir)]
-             [path (normal-case-path (simplify-path path))])
-        (define-values (ts real-path) (get-timestamp path))
-        (add-paths! (make-mod name path ts code) (resolve-paths path))
-        (parameterize ([current-module-declare-source real-path]) (eval code)))
+      (with-handlers ([(lambda (exn)
+                         (and (pair? name) (exn:get-module-code? exn)))
+                       ;; Load-handler protocol: quiet failure when a
+                       ;; submodule is not found
+                       (lambda (exn) (void))])
+        (let* ([code (get-module-code
+                      path "compiled"
+                      (lambda (e)
+                        (parameterize ([compile-enforce-module-constants #f])
+                          (compile e)))
+                      (lambda (ext loader?) (load-extension ext) #f)
+                      #:notify (lambda (chosen) (notify re? chosen)))]
+               [dir (or (current-load-relative-directory) (current-directory))]
+               [path (path->complete-path path dir)]
+               [path (normal-case-path (simplify-path path))])
+          (define-values (ts real-path) (get-timestamp path))
+          (add-paths! (make-mod name path ts code) (resolve-paths path))
+          (parameterize ([current-module-declare-source real-path])
+            (eval code))))
       ;; Not a module:
       (begin (notify re? path) (orig path name))))
 
