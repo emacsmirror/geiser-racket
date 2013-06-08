@@ -32,12 +32,19 @@
   (current-namespace (module->namespace mod))
   (last-entered name))
 
+(define (file-mod? mod)
+  (and (list? mod)
+       (= 2 (length mod))
+       (eq? 'file (car mod))
+       (path-string? (cadr mod))))
+
 (define (submod-path mod)
   (and (list? mod)
        (eq? 'submod (car mod))
        (> (length mod) 1)
        (let ([parent (cadr mod)])
          (cond [(path-string? parent) `(submod (file ,parent) ,@(cddr mod))]
+               [(file-mod? parent) mod]
                [(symbol? parent) mod]
                [else #f]))))
 
@@ -47,10 +54,7 @@
          (last-entered "")]
         [(symbol? mod) (do-enter mod (symbol->string mod))]
         [(path-string? mod) (do-enter `(file ,mod) mod)]
-        [(and (list? mod)
-              (= 2 (length mod))
-              (eq? 'file (car mod))
-              (path-string? (cadr mod))) (do-enter mod (cadr mod))]
+        [(file-mod? mod) (do-enter mod (cadr mod))]
         [(submod-path mod) => (lambda (m) (do-enter m m))]
         [else (raise-syntax-error #f "Invalid module path" stx mod)]))
 
