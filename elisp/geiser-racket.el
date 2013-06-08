@@ -323,6 +323,7 @@ using start-geiser, a procedure in the geiser/server module."
  (mixin 2)
  (module defun)
  (module+ defun)
+ (module* defun)
  (parameterize-break 1)
  (quasisyntax/loc 1)
  (send* 1)
