@@ -122,9 +122,10 @@ using start-geiser, a procedure in the geiser/server module."
       "#f")))
 
 (defun geiser-racket--enter-command (module)
-  (when (stringp module)
+  (when (or (stringp module) (listp module))
     (cond ((zerop (length module)) ",enter #f")
-          ((file-name-absolute-p module) (format ",enter %S" module))
+          ((or (listp module)
+               (file-name-absolute-p module)) (format ",enter %S" module))
           (t (format ",enter %s" module)))))
 
 (defun geiser-racket--geiser-procedure (proc &rest args)
@@ -141,27 +142,34 @@ using start-geiser, a procedure in the geiser/server module."
     (t (format ",apply geiser:%s (%s)" proc (mapconcat 'identity args " ")))))
 
 (defconst geiser-racket--module-re
-  "^(module +\\([^ ]+\\)")
+  "^(module[+*]? +\\([^ ]+\\)")
 
 (defun geiser-racket--explicit-module ()
   (save-excursion
-    (goto-char (point-min))
-    (and (re-search-forward geiser-racket--module-re nil t)
+    (ignore-errors
+      (while (not (zerop (geiser-syntax--nesting-level)))
+        (backward-up-list)))
+    (and (looking-at geiser-racket--module-re)
          (ignore-errors
            (car (geiser-syntax--read-from-string
                  (match-string-no-properties 1)))))))
 
-(defsubst geiser-racket--implicit-module ()
+(defun geiser-racket--implicit-module ()
   (save-excursion
     (goto-char (point-min))
-    (if (re-search-forward "^#lang " nil t)
-        (buffer-file-name)
-      :f)))
+    (when (re-search-forward "^#lang " nil t)
+      (buffer-file-name))))
+
+(defun geiser-racket--find-module ()
+  (let ((bf (geiser-racket--implicit-module))
+        (sub (geiser-racket--explicit-module)))
+    (cond ((and (not bf) (not sub)) :f)
+          ((and (not bf) sub) sub)
+          (sub `(submod (file ,bf) ,sub))
+          (t bf))))
 
 (defun geiser-racket--get-module (&optional module)
-  (cond ((and (null module) (buffer-file-name)))
-        ;; (geiser-racket--explicit-module)
-        ((null module) (geiser-racket--implicit-module))
+  (cond ((null module) (geiser-racket--find-module))
         ((symbolp module) module)
         ((and (stringp module) (file-name-absolute-p module)) module)
         ((stringp module) (make-symbol module))
