@@ -89,7 +89,7 @@
          [(set-image-cache) (image-cache (read))]
          [(help) (get-help (read) (read))]
          [(image-cache) (image-cache)]
-         [(gcd) (current-directory)]
+         [(pwd) (~a (current-directory))]
          [(cd) (current-directory (read))]
          [else form])]
       [_ form])))
