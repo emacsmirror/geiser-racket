@@ -1,6 +1,6 @@
 ;;; modules.rkt -- module metadata
 
-;; Copyright (C) 2009, 2010, 2011 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -74,25 +74,30 @@
 (define (unix-path->string path)
   (regexp-replace* "\\\\" (path->string path) "/"))
 
+(define (path->name path)
+  (if (path-string? path)
+      (let* ([cpaths (map (compose unix-path->string path->directory-path)
+                          (current-library-collection-paths))]
+             [prefix-len (lambda (p)
+                           (let ((pl (string-length p)))
+                             (if (= pl (string-prefix-length p path))
+                                 pl
+                                 0)))]
+             [lens (map prefix-len cpaths)]
+             [real-path (substring path (apply max lens))])
+        (if (absolute-path? real-path)
+            (let-values ([(_ base __) (split-path path)])
+              (unix-path->string base))
+            (regexp-replace "\\.[^./]*$" real-path "")))
+      path))
+
 (define (module-path-name->name path)
   (cond [(path? path) (module-path-name->name (unix-path->string path))]
         ;; [(eq? path '#%kernel) "(kernel)"]
-        [(string? path)
-         (let* ([cpaths (map (compose unix-path->string path->directory-path)
-                             (current-library-collection-paths))]
-                [prefix-len (lambda (p)
-                              (let ((pl (string-length p)))
-                                (if (= pl (string-prefix-length p path))
-                                    pl
-                                    0)))]
-                [lens (map prefix-len cpaths)]
-                [real-path (substring path (apply max lens))])
-           (if (absolute-path? real-path)
-             (let-values ([(_ base __) (split-path path)])
-               (unix-path->string base))
-             (regexp-replace "\\.[^./]*$" real-path "")))]
+        [(path-string? path) (path->name path)]
         [(symbol? path) (symbol->string path)]
-        [else unknown-module-name]))
+        [(list? path) (string-join (map (compose path->name ~a) path) "/")]
+        [else (~a path)]))
 
 (define (module-path-index->name mpi)
   (let ([rmp (module-path-index-resolve mpi)])
