@@ -113,13 +113,41 @@ using start-geiser, a procedure in the geiser/server module."
 
 ;;; Evaluation support:
 
+(defconst geiser-racket--module-re
+  "^(module[+*]? +\\([^ ]+\\)\\W+\\([^ ]+\\)?")
+
+(defun geiser-racket--explicit-module ()
+  (save-excursion
+    (ignore-errors
+      (while (not (zerop (geiser-syntax--nesting-level)))
+        (backward-up-list)))
+    (and (looking-at geiser-racket--module-re)
+         (let ((mod (match-string-no-properties 1))
+               (lang (match-string-no-properties 2)))
+           (cons (geiser-syntax--form-from-string mod)
+                 (geiser-syntax--form-from-string lang))))))
+
 (defun geiser-racket--language ()
+  (or (cdr (geiser-racket--explicit-module))
+      (save-excursion
+        (goto-char (point-min))
+        (if (re-search-forward "^#lang +\\([^ ]+\\)" nil t)
+            (geiser-syntax--form-from-string (match-string-no-properties 1))))
+      "#f"))
+
+(defun geiser-racket--implicit-module ()
   (save-excursion
     (goto-char (point-min))
-    (if (re-search-forward
-         "^\\(?:#lang\\|(module +[^ ]+?\\) +\\([^ ]+?\\|([^)]+)\\) *$" nil t)
-        (car (geiser-syntax--read-from-string (match-string-no-properties 1)))
-      "#f")))
+    (when (re-search-forward "^#lang " nil t)
+      (buffer-file-name))))
+
+(defun geiser-racket--find-module ()
+  (let ((bf (geiser-racket--implicit-module))
+        (sub (car (geiser-racket--explicit-module))))
+    (cond ((and (not bf) (not sub)) nil)
+          ((and (not bf) sub) sub)
+          (sub `(submod (file ,bf) ,sub))
+          (t bf))))
 
 (defun geiser-racket--enter-command (module)
   (when (or (stringp module) (listp module))
@@ -136,40 +164,12 @@ using start-geiser, a procedure in the geiser/server module."
              (geiser-racket--language)
              (mapconcat 'identity (cdr args) " ")))
     ((load-file compile-file)
-     (format ",geiser-eval geiser/main racket (geiser:%s %s)"
-             proc (car args)))
+     (format ",geiser-load %S" (geiser-racket--find-module)))
     ((no-values) ",geiser-no-values")
     (t (format ",apply geiser:%s (%s)" proc (mapconcat 'identity args " ")))))
 
-(defconst geiser-racket--module-re
-  "^(module[+*]? +\\([^ ]+\\)")
-
-(defun geiser-racket--explicit-module ()
-  (save-excursion
-    (ignore-errors
-      (while (not (zerop (geiser-syntax--nesting-level)))
-        (backward-up-list)))
-    (and (looking-at geiser-racket--module-re)
-         (ignore-errors
-           (car (geiser-syntax--read-from-string
-                 (match-string-no-properties 1)))))))
-
-(defun geiser-racket--implicit-module ()
-  (save-excursion
-    (goto-char (point-min))
-    (when (re-search-forward "^#lang " nil t)
-      (buffer-file-name))))
-
-(defun geiser-racket--find-module ()
-  (let ((bf (geiser-racket--implicit-module))
-        (sub (geiser-racket--explicit-module)))
-    (cond ((and (not bf) (not sub)) :f)
-          ((and (not bf) sub) sub)
-          (sub `(submod (file ,bf) ,sub))
-          (t bf))))
-
 (defun geiser-racket--get-module (&optional module)
-  (cond ((null module) (geiser-racket--find-module))
+  (cond ((null module) (or (geiser-racket--find-module) :f))
         ((symbolp module) module)
         ((and (stringp module) (file-name-absolute-p module)) module)
         ((stringp module) (make-symbol module))
