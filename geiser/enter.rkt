@@ -1,6 +1,6 @@
 ;;; enter.rkt -- custom module loaders
 
-;; Copyright (C) 2010, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -17,7 +17,7 @@
 
 (provide get-namespace enter-module module-loader module-loaded?)
 
-(struct mod (name load-path timestamp depends))
+(struct mod (name load-path timestamp depends) #:transparent)
 
 (define (make-mod name path ts code)
   (let ([deps (if code
@@ -129,8 +129,6 @@
                   (values -inf.0 path)))
             (values -inf.0 path)))))
 
-(define orig (current-load/use-compiled))
-
 (define (check-latest mod)
   (define mpi (module-path-index-join mod #f))
   (define done (make-hash))
@@ -146,7 +144,7 @@
         (when mod
           (for-each loop (mod-depends mod))
           (define-values (ts actual-path) (get-timestamp npath))
-          (when (ts . > . (mod-timestamp mod))
+          (when (> ts (mod-timestamp mod))
             (define orig (current-load/use-compiled))
             (parameterize ([current-load/use-compiled
                             (enter-load/use-compiled orig #f)]
