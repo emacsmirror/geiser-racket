@@ -1,6 +1,6 @@
 ;;; eval.rkt -- evaluation
 
-;; Copyright (C) 2009, 2010, 2011, 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -15,8 +15,8 @@
          load-file
          macroexpand
          add-to-load-path
-         make-repl-reader)
-
+         make-repl-reader
+         call-with-result)
 
 (require geiser/enter geiser/modules geiser/images)
 (require errortrace/errortrace-lib)
@@ -50,7 +50,7 @@
              (parameterize ([current-error-port (current-output-port)])
                (with-handlers ([exn? set-last-error])
                  (call-with-values thunk set-last-result)))))])
-    (append last-result `((output . ,output)))))
+    (append last-result `(,(cons 'output output)))))
 
 (define (eval-in form spec lang)
   (write (call-with-result
