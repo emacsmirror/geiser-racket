@@ -47,7 +47,7 @@
 
 (define (load-module spec (port #f) (ns #f))
   (parameterize ([current-error-port (or port nowhere)])
-    (enter-module (ensure-module-spec spec))
+    (visit-module (ensure-module-spec spec))
     (when (namespace? ns)
       (current-namespace ns))))
 

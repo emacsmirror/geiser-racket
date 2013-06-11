@@ -28,7 +28,7 @@
 (define last-entered (make-parameter ""))
 
 (define (do-enter mod name)
-  (enter-module mod)
+  (visit-module mod)
   (current-namespace (module->namespace mod))
   (last-entered name))
 
@@ -82,7 +82,7 @@
   (let* ([mod (read)]
          [res (call-with-result
                (lambda ()
-                 (enter-module (cond [(file-mod? mod) mod]
+                 (visit-module (cond [(file-mod? mod) mod]
                                      [(path-string? mod) `(file ,mod)]
                                      [(submod-path mod)]
                                      [else (module-error stx mod)]))
