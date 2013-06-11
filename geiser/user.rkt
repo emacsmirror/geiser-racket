@@ -108,7 +108,7 @@
          [(help) (get-help (read) (read))]
          [(image-cache) (image-cache)]
          [(pwd) (~a (current-directory))]
-         [(cd) (current-directory (read))]
+         [(cd) (current-directory (~a (read)))]
          [else form])]
       [_ form])))
 
