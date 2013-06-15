@@ -20,6 +20,8 @@
 (require 'geiser-base)
 (require 'geiser)
 
+(eval-when-compile (require 'cl))
+
 
 ;;; Customization:
 
