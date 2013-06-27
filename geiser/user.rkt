@@ -29,8 +29,8 @@
 
 (define (do-enter mod name)
   (visit-module mod)
-  (current-namespace (module->namespace mod))
-  (last-entered name))
+  (last-entered name)
+  (current-namespace (module->namespace mod)))
 
 (define (file-mod? mod)
   (and (list? mod)
@@ -60,9 +60,6 @@
         [(file-mod? mod) (do-enter mod (cadr mod))]
         [(submod-path mod) => (lambda (m) (do-enter m m))]
         [else (module-error stx mod)]))
-
-(define orig-loader (current-load/use-compiled))
-(define geiser-loader (module-loader orig-loader))
 
 (define (geiser-eval)
   (define geiser-main (module->namespace 'geiser))
@@ -120,9 +117,11 @@
 (define (geiser-prompt-read prompt)
   (make-repl-reader (geiser-read prompt)))
 
+(define (geiser-loader) (module-loader (current-load/use-compiled)))
+
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
-  (current-load/use-compiled geiser-loader)
+  (current-load/use-compiled (geiser-loader))
   (preload-help)
   (current-prompt-read (geiser-prompt-read geiser-prompt))
   (current-print maybe-print-image))
@@ -132,7 +131,7 @@
                  (current-input-port in)
                  (current-output-port out)
                  (current-error-port out)
-                 (current-load/use-compiled geiser-loader)
+                 (current-load/use-compiled (geiser-loader))
                  (current-prompt-read (geiser-prompt-read geiser-prompt))
                  (current-print maybe-print-image)]
     (preload-help)

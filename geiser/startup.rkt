@@ -15,7 +15,7 @@
          "Racket version 5.0 or better required (found ~a)"
          (version)))
 
-(require errortrace)
+;; (require errortrace)
 (require geiser/user)
 
 (init-geiser-repl)

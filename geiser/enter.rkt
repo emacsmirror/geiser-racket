@@ -67,9 +67,7 @@
     (list 'file (or (and m (mod-load-path m)) path-str))))
 
 (define (add-paths! m ps)
-  (let* ([name (mod-name m)]
-         [pm (if (pair? name) (lambda (p) (cons p (cdr name))) (lambda (p) p))])
-    (for-each (lambda (p) (hash-set! loaded (pm p) m)) ps)))
+  (for-each (lambda (p) (hash-set! loaded p m)) ps))
 
 (define (resolve-paths path)
   (define (find root rest)
@@ -99,7 +97,6 @@
                      (parameterize ([compile-enforce-module-constants #f])
                        (compile e)))
                    (lambda (ext loader?) (load-extension ext) #f)
-                   #:submodule-path (if (pair? name) (cdr name) '())
                    #:notify (lambda (chosen) (notify re? chosen))))
 
 (define ((make-loader orig re?) path name)
