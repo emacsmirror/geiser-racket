@@ -90,7 +90,6 @@
   (and name (not (and (pair? name) (not (car name))))))
 
 (define (module-code re? name path)
-  (printf "Code for module ~a at ~a~%" name path)
   (get-module-code path
                    "compiled"
                    (lambda (e)
