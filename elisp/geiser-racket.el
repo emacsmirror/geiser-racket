@@ -382,7 +382,7 @@ using start-geiser, a procedure in the geiser/server module."
                  (read-string "Submodule name: " nil
                               'geiser-racket--submodule-history))
                 ((stringp name) name)
-                t "")))
+                (t ""))))
 
 (defun geiser-racket-toggle-submodules (&optional name)
   "Toggle visibility of submodule forms.
