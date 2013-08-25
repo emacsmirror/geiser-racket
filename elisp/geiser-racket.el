@@ -370,6 +370,27 @@ using start-geiser, a procedure in the geiser/server module."
     (setq geiser-image-cache-dir
           (geiser-eval--send/result '(:eval (image-cache) geiser/user)))))
 
+
+;;; Additional commands
+
+(defconst geiser-racket--test-module "module+ test")
+
+(defun geiser-racket-toggle-tests ()
+  "Toggle visibility of test module fragments of the form (module+ test).
+
+When hidden, the test module forms are shown as an ellipsis."
+  (interactive)
+  (geiser-edit--toggle-visibility geiser-racket--test-module))
+
+(defun geiser-racket-show-tests ()
+  "Unconditionally shows all test modules."
+  (interactive)
+  (geiser-edit--show geiser-racket--test-module))
+
+(defun geiser-racket-hide-tests ()
+  "Unconditionally hides all visible test modules."
+  (interactive)
+  (geiser-edit--hide geiser-racket--test-module))
 
 
 ;;; Implementation definition:
