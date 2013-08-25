@@ -373,24 +373,38 @@ using start-geiser, a procedure in the geiser/server module."
 
 ;;; Additional commands
 
-(defconst geiser-racket--test-module "module+ test")
+(defvar geiser-racket--submodule-history ())
 
-(defun geiser-racket-toggle-tests ()
-  "Toggle visibility of test module fragments of the form (module+ test).
+(defun geiser-racket--submodule-form (name)
+  (format "module[+*]? %s"
+          (cond ((eq 1 name) "")
+                ((numberp name)
+                 (read-string "Submodule name: " nil
+                              'geiser-racket--submodule-history))
+                ((stringp name) name)
+                t "")))
 
-When hidden, the test module forms are shown as an ellipsis."
-  (interactive)
-  (geiser-edit--toggle-visibility geiser-racket--test-module))
+(defun geiser-racket-toggle-submodules (&optional name)
+  "Toggle visibility of submodule forms.
 
-(defun geiser-racket-show-tests ()
-  "Unconditionally shows all test modules."
-  (interactive)
-  (geiser-edit--show geiser-racket--test-module))
+Use a prefix to be asked for a submodule name."
+  (interactive "p")
+  (geiser-edit--toggle-visibility (geiser-racket--submodule-form name)))
 
-(defun geiser-racket-hide-tests ()
-  "Unconditionally hides all visible test modules."
-  (interactive)
-  (geiser-edit--hide geiser-racket--test-module))
+(defun geiser-racket-show-submodules (&optional name)
+  "Unconditionally shows all submodule forms.
+
+Use a prefix to be asked for a submodule name."
+  (interactive "p")
+  (cond ((eq 1 name) (geiser-edit--show-all))
+        (t (geiser-edit--show (geiser-racket--submodule-form name)))))
+
+(defun geiser-racket-hide-submodules (&optional name)
+  "Unconditionally hides all visible submodules.
+
+Use a prefix to be asked for a submodule name."
+  (interactive "p")
+  (geiser-edit--hide (geiser-racket--submodule-form name)))
 
 
 ;;; Implementation definition:
