@@ -358,7 +358,12 @@ using start-geiser, a procedure in the geiser/server module."
  (with-handlers: 1))
 
 
-;;; Startup
+;;; REPL Startup
+
+(defvar geiser-racket-minimum-version "5.3")
+
+(defun geiser-racket--version (binary)
+  (shell-command-to-string (format "%s  -e '(display (version))'" binary)))
 
 (defun geiser-racket--startup (remote)
   (set (make-local-variable 'compilation-error-regexp-alist)
@@ -412,6 +417,8 @@ Use a prefix to be asked for a submodule name."
 (define-geiser-implementation racket
   (unsupported-procedures '(callers callees generic-methods))
   (binary geiser-racket--binary)
+  (minimum-version geiser-racket-minimum-version)
+  (version-command geiser-racket--version)
   (arglist geiser-racket--parameters)
   (repl-startup geiser-racket--startup)
   (prompt-regexp geiser-racket--prompt-regexp)
