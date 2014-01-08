@@ -1,6 +1,6 @@
 ;;; eval.rkt -- evaluation
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -52,10 +52,11 @@
                  (call-with-values thunk set-last-result)))))])
     (append last-result `(,(cons 'output output)))))
 
-(define (eval-in form spec lang)
+(define (eval-in form spec lang . non-top)
   (write (call-with-result
           (lambda ()
-            (eval form (module-spec->namespace spec lang)))))
+            (eval (if (null? non-top) (cons '#%top-interaction form) form)
+                  (module-spec->namespace spec lang)))))
   (newline))
 
 (define (load-file file)

@@ -1,6 +1,6 @@
 ;;; user.rkt -- global bindings visible to geiser users
 
-;; Copyright (C) 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -71,7 +71,7 @@
                      (let* ([proc (eval-here (read))]
                             [args (map eval-here (read))]
                             [ev (lambda () (apply proc args))])
-                       (eval-in `(,ev) mod lang))]
+                       (eval-in `(,ev) mod lang #t))]
                     [else ((geiser:eval lang) form mod)])])
     (datum->syntax #f (list 'quote res))))
 
