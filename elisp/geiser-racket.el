@@ -1,6 +1,6 @@
 ;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -137,11 +137,14 @@ using start-geiser, a procedure in the geiser/server module."
             (geiser-syntax--form-from-string (match-string-no-properties 1))))
       "#f"))
 
-(defun geiser-racket--implicit-module ()
+(defun geiser-racket--implicit-module (&optional pos)
   (save-excursion
     (goto-char (point-min))
     (when (re-search-forward "^#lang " nil t)
-      (buffer-file-name))))
+      (if pos (progn (end-of-line) (list (point))) (buffer-file-name)))))
+
+(defun geiser-racket--eval-bounds ()
+  (geiser-racket--implicit-module t))
 
 (defun geiser-racket--find-module ()
   (let ((bf (geiser-racket--implicit-module))
@@ -428,6 +431,7 @@ Use a prefix to be asked for a submodule name."
   (import-command geiser-racket--import-command)
   (exit-command geiser-racket--exit-command)
   (find-symbol-begin geiser-racket--symbol-begin)
+  (eval-bounds geiser-racket--eval-bounds)
   (display-error geiser-racket--display-error)
   (external-help geiser-racket--external-help)
   (check-buffer geiser-racket--guess)
