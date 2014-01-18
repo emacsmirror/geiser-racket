@@ -152,4 +152,4 @@
                             (make-loader orig #f)]
                            [current-module-declare-name rindex]
                            [current-module-declare-source actual-path])
-              ((make-loader orig #t) npath (mod-name mod)))))))))
+              ((make-loader orig #f) npath (mod-name mod)))))))))
