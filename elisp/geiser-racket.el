@@ -61,8 +61,7 @@ This executable is used by `run-gracket', and, if
   :group 'geiser-racket)
 
 (geiser-custom--defcustom geiser-racket-extra-keywords
-    '("define-syntax-rule" "provide" "require"
-      "unless" "when" "with-handlers")
+    '("provide" "require" "unless" "when" "with-handlers")
   "Extra keywords highlighted in Racket buffers."
   :type '(repeat string)
   :group 'geiser-racket)
