@@ -119,9 +119,7 @@ using start-geiser, a procedure in the geiser/server module."
 
 (defun geiser-racket--explicit-module ()
   (save-excursion
-    (ignore-errors
-      (while (not (zerop (geiser-syntax--nesting-level)))
-        (backward-up-list)))
+    (geiser-syntax--pop-to-top)
     (and (looking-at geiser-racket--module-re)
          (let ((mod (match-string-no-properties 1))
                (lang (match-string-no-properties 2)))
