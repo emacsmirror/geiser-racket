@@ -119,12 +119,22 @@
 
 (define (geiser-loader) (module-loader (current-load/use-compiled)))
 
+(define (install-print-handler handler)
+  (let ([p (current-output-port)])
+    (handler p (make-port-print-handler (handler p)))))
+
+(define (install-print-handlers)
+  (for-each install-print-handler (list port-print-handler
+                                        port-write-handler
+                                        port-display-handler)))
+
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
   (current-load/use-compiled (geiser-loader))
   (preload-help)
   (current-prompt-read (geiser-prompt-read geiser-prompt))
-  (current-print maybe-print-image))
+  (current-print maybe-print-image)
+  (install-print-handlers))
 
 (define (run-geiser-repl in out enforce-module-constants)
   (parameterize [(compile-enforce-module-constants enforce-module-constants)
@@ -134,6 +144,7 @@
                  (current-load/use-compiled (geiser-loader))
                  (current-prompt-read (geiser-prompt-read geiser-prompt))
                  (current-print maybe-print-image)]
+    (install-print-handlers)
     (preload-help)
     (read-eval-print-loop)))
 

@@ -1,6 +1,6 @@
 ;;; images.rkt -- support for image handline
 
-;; Copyright (C) 2012 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2012, 2014 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -14,7 +14,10 @@
 #lang racket/base
 
 (require racket/file file/convertible racket/pretty)
-(provide image-cache maybe-print-image maybe-write-image)
+(provide image-cache
+         maybe-print-image
+         maybe-write-image
+         make-port-print-handler)
 
 (define image-cache
   (let ([ensure-dir (lambda (dir)
@@ -44,3 +47,7 @@
 
 (define (maybe-write-image value)
   (write (or (maybe-save-image value) value)))
+
+(define (make-port-print-handler ph)
+  (lambda (value port . rest)
+    (apply ph (or (maybe-save-image value) value) port rest)))
