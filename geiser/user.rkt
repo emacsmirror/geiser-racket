@@ -126,7 +126,9 @@
 (define (install-print-handlers)
   (for-each install-print-handler (list port-print-handler
                                         port-write-handler
-                                        port-display-handler)))
+                                        port-display-handler))
+  (pretty-print-print-hook (make-pretty-print-print-hook))
+  (pretty-print-size-hook (make-pretty-print-size-hook)))
 
 (define (init-geiser-repl)
   (compile-enforce-module-constants #f)
@@ -143,7 +145,9 @@
                  (current-error-port out)
                  (current-load/use-compiled (geiser-loader))
                  (current-prompt-read (geiser-prompt-read geiser-prompt))
-                 (current-print maybe-print-image)]
+                 (current-print maybe-print-image)
+                 (pretty-print-print-hook (make-pretty-print-print-hook))
+                 (pretty-print-size-hook (make-pretty-print-size-hook))]
     (install-print-handlers)
     (preload-help)
     (read-eval-print-loop)))

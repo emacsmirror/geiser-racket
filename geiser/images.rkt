@@ -17,7 +17,9 @@
 (provide image-cache
          maybe-print-image
          maybe-write-image
-         make-port-print-handler)
+         make-port-print-handler
+         make-pretty-print-size-hook
+         make-pretty-print-print-hook)
 
 (define image-cache
   (let ([ensure-dir (lambda (dir)
@@ -51,3 +53,14 @@
 (define (make-port-print-handler ph)
   (lambda (value port . rest)
     (apply ph (or (maybe-save-image value) value) port rest)))
+
+(define (make-pretty-print-size-hook [orig (pretty-print-size-hook)])
+  (lambda (value display? port)
+    (if (convertible? value)
+        (pretty-print-columns)
+        (orig value display? port))))
+
+(define (make-pretty-print-print-hook [orig (pretty-print-print-hook)])
+  (lambda (value display? port)
+    (let [(img (maybe-save-image value))]
+      (if img (print img port) (orig value display? port)))))
