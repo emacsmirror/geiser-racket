@@ -1,6 +1,6 @@
 ;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -366,6 +366,8 @@ using start-geiser, a procedure in the geiser/server module."
 (defun geiser-racket--version (binary)
   (shell-command-to-string (format "%s  -e '(display (version))'" binary)))
 
+(defvar geiser-racket--image-cache-dir nil)
+
 (defun geiser-racket--startup (remote)
   (set (make-local-variable 'compilation-error-regexp-alist)
        `(("^ *\\([^:(\t\n]+\\):\\([0-9]+\\):\\([0-9]+\\):" 1 2 3)))
@@ -373,8 +375,11 @@ using start-geiser, a procedure in the geiser/server module."
   (if geiser-image-cache-dir
       (geiser-eval--send/wait
        `(:eval (image-cache ,geiser-image-cache-dir) geiser/user))
-    (setq geiser-image-cache-dir
+    (setq geiser-racket--image-cache-dir
           (geiser-eval--send/result '(:eval (image-cache) geiser/user)))))
+
+(defun geiser-racket--image-cache-dir ()
+  (or geiser-image-cache-dir geiser-racket--image-cache-dir))
 
 
 ;;; Additional commands
@@ -434,6 +439,7 @@ Use a prefix to be asked for a submodule name."
   (external-help geiser-racket--external-help)
   (check-buffer geiser-racket--guess)
   (keywords geiser-racket--keywords)
+  (image-cache-dir geiser-racket--image-cache-dir)
   (case-sensitive geiser-racket-case-sensitive-p)
   (binding-forms geiser-racket--binding-forms)
   (binding-forms* geiser-racket--binding-forms*))
