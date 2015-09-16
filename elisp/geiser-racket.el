@@ -272,10 +272,7 @@ using start-geiser, a procedure in the geiser/server module."
 
 (defun geiser-racket--keywords ()
   (append geiser-racket-font-lock-forms
-          (when geiser-racket-extra-keywords
-            `((,(format "[[(]%s\\>"
-                        (regexp-opt geiser-racket-extra-keywords 1))
-               . 1)))))
+          (geiser-syntax--simple-keywords geiser-racket-extra-keywords)))
 
 (geiser-syntax--scheme-indent
  (begin0 1)
