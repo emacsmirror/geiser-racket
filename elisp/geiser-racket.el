@@ -20,6 +20,8 @@
 (require 'geiser-base)
 (require 'geiser)
 
+(require 'compile)
+
 (eval-when-compile (require 'cl))
 
 
@@ -263,7 +265,7 @@ using start-geiser, a procedure in the geiser/server module."
 
 ;;; Keywords and syntax
 
-(setq geiser-racket-font-lock-forms
+(defvar geiser-racket-font-lock-forms
   '(("^#lang\\>" . 0)
     ("\\[\\(else\\)\\>" . 1)
     ("(\\(define/match\\)\\W+[[(]?\\(\\w+\\)+\\b"
