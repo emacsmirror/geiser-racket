@@ -13,4 +13,3 @@
 
 (require geiser/user)
 (provide start-geiser)
-
