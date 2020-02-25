@@ -27,9 +27,9 @@
 
 (define (preload-help)
   (set! loader-thread
-        (thread (lambda ()
-                  (with-output-to-string (lambda ()
-                                           (help meh-i-dont-exist)))))))
+    (thread (lambda ()
+              (with-output-to-string (lambda ()
+                                       (help meh-i-dont-exist)))))))
 
 (define here (current-namespace))
 

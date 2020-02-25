@@ -91,7 +91,7 @@
   (flush-output (current-error-port))
   (flush-output (current-output-port))
   (let* ([in ((current-get-interaction-input-port))]
-	 [form ((current-read-interaction) (object-name in) in)])
+         [form ((current-read-interaction) (object-name in) in)])
     (syntax-case form ()
       [(uq cmd) (eq? 'unquote (syntax-e #'uq))
        (case (syntax-e #'cmd)

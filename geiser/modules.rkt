@@ -14,7 +14,7 @@
 (provide load-module
          ensure-module-spec
          module-spec->namespace
-	 namespace->module-name
+         namespace->module-name
          namespace->module-path-name
          module-path-name->name
          module-spec->path-name
@@ -221,7 +221,7 @@
   module-cache)
 
 (define (startup)
- (thread update-module-cache)
- (void))
+  (thread update-module-cache)
+  (void))
 
 (startup)
