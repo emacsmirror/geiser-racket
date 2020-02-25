@@ -33,15 +33,15 @@
   :group 'geiser)
 
 (geiser-custom--defcustom geiser-racket-binary
-  (cond ((eq system-type 'windows-nt) "Racket.exe")
-        (t "racket"))
+    (cond ((eq system-type 'windows-nt) "Racket.exe")
+          (t "racket"))
   "Name to use to call the racket executable when starting a REPL."
   :type '(choice string (repeat string))
   :group 'geiser-racket)
 
 (geiser-custom--defcustom geiser-racket-gracket-binary
-  (cond ((eq system-type 'windows-nt) "GRacket-text.exe")
-        (t "gracket-text"))
+    (cond ((eq system-type 'windows-nt) "GRacket-text.exe")
+          (t "gracket-text"))
   "Name to use to call the gracket executable when starting a REPL.
 This executable is used by `run-gracket', and, if
 `geiser-racket-use-gracket-p' is set to t, by `run-racket'."
