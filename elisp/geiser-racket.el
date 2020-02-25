@@ -1,4 +1,4 @@
-;; geiser-racket.el -- geiser support for Racket scheme
+;;; geiser-racket.el -- geiser support for Racket scheme
 
 ;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Jose Antonio Ortega Ruiz
 
