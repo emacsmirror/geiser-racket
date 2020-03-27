@@ -23,7 +23,7 @@
 
 (require 'compile)
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 
 
 ;;; Customization:
@@ -162,7 +162,7 @@ using start-geiser, a procedure in the geiser/server module."
           (t (format ",enter %s" module)))))
 
 (defun geiser-racket--geiser-procedure (proc &rest args)
-  (case proc
+  (cl-case proc
     ((eval compile)
      (format ",geiser-eval %s %s %s"
              (or (car args) "#f")
