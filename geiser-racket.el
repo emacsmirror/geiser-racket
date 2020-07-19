@@ -456,8 +456,8 @@ Use a prefix to be asked for a submodule name."
   (binding-forms geiser-racket--binding-forms)
   (binding-forms* geiser-racket--binding-forms*))
 
-(geiser-impl--add-to-alist 'regexp "\\.ss$" 'racket t)
-(geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?$" 'racket t)
+(geiser-impl--add-to-alist 'regexp "\\.ss\\'" 'racket t)
+(geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?\\'" 'racket t)
 
 ;;;###autoload
 (defun run-gracket ()
