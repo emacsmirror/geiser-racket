@@ -1,13 +1,20 @@
 ;;; geiser-racket.el -- geiser support for Racket scheme
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020 Jose Antonio Ortega Ruiz
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the Modified BSD License. You should
-;; have received a copy of the license along with this program. If
-;; not, see <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5>.
+;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
+;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
+;; Keywords: languages, racket, scheme, geiser
+;; Homepage: https://gitlab.com/emacs-geiser/racket
+;; Package-Requires: ((emacs "26.1") (geiser-core "1.0"))
+;; SPDX-License-Identifier: BSD-3-Clause
+;; Version: 1.0
 
-;; Start date: Sat Apr 25, 2009 21:13
+;; This file is NOT part of GNU Emacs.
+
+;;; Commentary:
+;; geiser-racket extends the `geiser' core package to support the
+;; Racket "scheme" implementation.
 
 
 ;;; Code:
@@ -86,13 +93,16 @@ This executable is used by `run-gracket', and, if
   (let ((binary (geiser-racket--real-binary)))
     (if (listp binary) (car binary) binary)))
 
+(defvar geiser-racket-scheme-dir
+  (expand-file-name "src/" (file-name-directory load-file-name)))
+
 (defun geiser-racket--parameters ()
   "Return a list with all parameters needed to start racket.
 This function uses `geiser-racket-init-file' if it exists."
   (let ((init-file (and (stringp geiser-racket-init-file)
                         (expand-file-name geiser-racket-init-file)))
         (binary (geiser-racket--real-binary))
-        (rackdir (expand-file-name "racket/" geiser-scheme-dir)))
+        (rackdir geiser-racket-scheme-dir))
     `("-i" "-q" "-S" ,rackdir
       ,@(apply 'append (mapcar (lambda (p) (list "-S" p))
                                geiser-racket-collects))
@@ -105,6 +115,7 @@ This function uses `geiser-racket-init-file' if it exists."
 
 ;;; Remote REPLs
 
+;;;###autoload
 (defun connect-to-racket ()
   "Start a Racket REPL connected to a remote process.
 
@@ -231,7 +242,7 @@ using start-geiser, a procedure in the geiser/server module."
     "module: \"\\([^>\"\n]+\\)\""))
 
 (defconst geiser-racket--geiser-file-rx
-  (format "^ *%s/?racket/geiser" (regexp-quote geiser-scheme-dir)))
+  (format "^ *%s/geiser" (regexp-quote geiser-racket-scheme-dir)))
 
 (defun geiser-racket--purge-trace ()
   (save-excursion
@@ -448,11 +459,19 @@ Use a prefix to be asked for a submodule name."
 (geiser-impl--add-to-alist 'regexp "\\.ss$" 'racket t)
 (geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?$" 'racket t)
 
+;;;###autoload
 (defun run-gracket ()
   "Start the Racket REPL using gracket instead of plain racket."
   (interactive)
   (let ((geiser-racket-use-gracket-p t))
     (run-racket)))
+
+;;;###autoload
+(autoload 'run-racket "geiser-racket" "Start a Geiser Racket REPL." t)
+
+;;;###autoload
+(autoload 'switch-to-racket "geiser-racket"
+  "Start a Geiser Racket REPL, or switch to a running one." t)
 
 
 (provide 'geiser-racket)
