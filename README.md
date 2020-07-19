@@ -1,4 +1,4 @@
-# Racket support for Geiser
+# Racket and Geiser talk to each other
 
 This package provides support for using
 [Racket](http://racket-lang.org) in Emacs with
