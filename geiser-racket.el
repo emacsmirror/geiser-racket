@@ -1,19 +1,19 @@
-;;; geiser-racket.el -- geiser support for Racket scheme
-
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020 Jose Antonio Ortega Ruiz
+;;; geiser-racket.el --- Spport for Racket in Geiser  -*- lexical-binding: t; -*-
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, racket, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/racket
-;; Package-Requires: ((emacs "26.1") (geiser-core "1.0"))
+;; Package-Requires: ((emacs "26.1") (geiser "0.12"))
 ;; SPDX-License-Identifier: BSD-3-Clause
 ;; Version: 1.0
 
-;; This file is NOT part of GNU Emacs.
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020, 2021 Jose Antonio Ortega Ruiz
+
 
 ;;; Commentary:
-;; geiser-racket extends the `geiser' core package to support the
+
+;; This package extends the `geiser' core package to support the
 ;; Racket "scheme" implementation.
 
 
@@ -84,17 +84,20 @@ This executable is used by `run-gracket', and, if
 
 ;;; REPL support:
 
-(defsubst geiser-racket--real-binary ()
+(defun geiser-racket--real-binary ()
+  "Decide what racket binary to use."
   (if geiser-racket-use-gracket-p
       geiser-racket-gracket-binary
     geiser-racket-binary))
 
 (defun geiser-racket--binary ()
+  "Combine real binary with any given flags."
   (let ((binary (geiser-racket--real-binary)))
     (if (listp binary) (car binary) binary)))
 
 (defvar geiser-racket-scheme-dir
-  (expand-file-name "src/" (file-name-directory load-file-name)))
+  (expand-file-name "src" (file-name-directory load-file-name))
+  "Directory where the Racket geiser package is installed.")
 
 (defun geiser-racket--parameters ()
   "Return a list with all parameters needed to start racket.
@@ -116,7 +119,7 @@ This function uses `geiser-racket-init-file' if it exists."
 ;;; Remote REPLs
 
 ;;;###autoload
-(defun connect-to-racket ()
+(defun geiser-racket-connect ()
   "Start a Racket REPL connected to a remote process.
 
 The remote process needs to be running a REPL server started
@@ -132,6 +135,7 @@ using start-geiser, a procedure in the geiser/server module."
   "^(module[+*]? +\\([^ ]+\\)\\W+\\([^ ]+\\)?")
 
 (defun geiser-racket--explicit-module ()
+  "Detect an explicit racket module declaration, if any."
   (save-excursion
     (geiser-syntax--pop-to-top)
     (and (looking-at geiser-racket--module-re)
@@ -141,6 +145,7 @@ using start-geiser, a procedure in the geiser/server module."
                  (geiser-syntax--form-from-string lang))))))
 
 (defun geiser-racket--language ()
+  "Detect a #lang stanza, if any."
   (or (cdr (geiser-racket--explicit-module))
       (save-excursion
         (goto-char (point-min))
@@ -149,15 +154,18 @@ using start-geiser, a procedure in the geiser/server module."
       "#f"))
 
 (defun geiser-racket--implicit-module (&optional pos)
+  "Detect the module of a #lang stanza, if any, returning position if POS is t."
   (save-excursion
     (goto-char (point-min))
     (when (re-search-forward "^#lang " nil t)
       (if pos (progn (end-of-line) (list (point))) (buffer-file-name)))))
 
 (defun geiser-racket--eval-bounds ()
+  "Look for a module and return its end position."
   (geiser-racket--implicit-module t))
 
 (defun geiser-racket--find-module ()
+  "Try to find the module declared in a visited racket file."
   (let ((bf (geiser-racket--implicit-module))
         (sub (car (geiser-racket--explicit-module))))
     (cond ((and (not bf) (not sub)) nil)
@@ -166,13 +174,16 @@ using start-geiser, a procedure in the geiser/server module."
           (t bf))))
 
 (defun geiser-racket--enter-command (module)
+  "Format an ,enter command for entering the given MODULE."
   (when (or (stringp module) (listp module))
     (cond ((zerop (length module)) ",enter #f")
           ((or (listp module)
-               (file-name-absolute-p module)) (format ",enter %S" module))
+               (file-name-absolute-p module))
+           (format ",enter %S" module))
           (t (format ",enter %s" module)))))
 
 (defun geiser-racket--geiser-procedure (proc &rest args)
+  "Format an eval procedure command for PROC with ARGS."
   (cl-case proc
     ((eval compile)
      (format ",geiser-eval %s %s %s"
@@ -185,6 +196,7 @@ using start-geiser, a procedure in the geiser/server module."
     (t (format ",apply geiser:%s (%s)" proc (mapconcat 'identity args " ")))))
 
 (defun geiser-racket--get-module (&optional module)
+  "Return the current module symbol, using MODULE as a hint."
   (cond ((null module) (or (geiser-racket--find-module) :f))
         ((symbolp module) module)
         ((and (stringp module) (file-name-absolute-p module)) module)
@@ -192,14 +204,17 @@ using start-geiser, a procedure in the geiser/server module."
         (t nil)))
 
 (defun geiser-racket--symbol-begin (module)
+  "Position of the beginning of MODULE's declaration."
   (save-excursion (skip-syntax-backward "^'-()>") (point)))
 
 (defun geiser-racket--import-command (module)
+  "Format a require statement for MODULE."
   (and (stringp module)
        (not (zerop (length module)))
        (format "(require %s)" module)))
 
 (defun geiser-racket--exit-command ()
+  "Send a REPL exit command, return current process."
   (comint-send-eof)
   (get-buffer-process (current-buffer)))
 
@@ -219,9 +234,11 @@ using start-geiser, a procedure in the geiser/server module."
 ;;; External help
 
 (defsubst geiser-racket--get-help (symbol module)
+  "Ask the Racket REPL for help on SYMBOL for the given MODULE."
   (geiser-eval--send/wait `(:scm ,(format ",help %s %s" symbol module))))
 
 (defun geiser-racket--external-help (id module)
+  "Display help for identifier ID in module MODULE."
   (message "Looking up manual for '%s'..." id)
   (let* ((ret (geiser-racket--get-help id (format "%S" module)))
          (out (geiser-eval--retort-output ret))
@@ -245,11 +262,13 @@ using start-geiser, a procedure in the geiser/server module."
   (format "^ *%s/geiser" (regexp-quote geiser-racket-scheme-dir)))
 
 (defun geiser-racket--purge-trace ()
+  "Clean up displayed stack trace."
   (save-excursion
     (while (re-search-forward geiser-racket--geiser-file-rx nil t)
       (kill-whole-line))))
 
 (defun geiser-racket--display-error (module key msg)
+  "Display an error returned from an evaluation with the given MODULE, KEY and MSG."
   (when key
     (insert "Error: ")
     (geiser-doc--insert-button key nil 'racket)
@@ -266,9 +285,9 @@ using start-geiser, a procedure in the geiser/server module."
   (if (and msg (string-match "\\(.+\\)$" msg)) (match-string 1 msg) key))
 
 
-;;; Trying to ascertain whether a buffer is racket code:
 
 (defun geiser-racket--guess ()
+  "Try to ascertain whether a buffer is racket code."
   (or (save-excursion
         (goto-char (point-min))
         (re-search-forward "#lang " nil t))
@@ -282,9 +301,11 @@ using start-geiser, a procedure in the geiser/server module."
     ("\\[\\(else\\)\\>" . 1)
     ("(\\(define/match\\)\\W+[[(]?\\(\\w+\\)+\\b"
      (1 font-lock-keyword-face)
-     (2 font-lock-function-name-face))))
+     (2 font-lock-function-name-face)))
+  "Additional font lock for Racket.")
 
 (defun geiser-racket--keywords ()
+  "Return a list of non-scheme Racket keywords."
   (append geiser-racket-font-lock-forms
           (geiser-syntax--simple-keywords geiser-racket-extra-keywords)))
 
@@ -376,11 +397,13 @@ using start-geiser, a procedure in the geiser/server module."
 (defvar geiser-racket-minimum-version "5.3")
 
 (defun geiser-racket--version (binary)
+  "Use BINARY path to retrieve Racket's version."
   (car (process-lines binary "-e" "(display (version))")))
 
 (defvar geiser-racket--image-cache-dir nil)
 
 (defun geiser-racket--startup (remote)
+  "Start the Racket REPL, which is perhaps REMOTE."
   (set (make-local-variable 'compilation-error-regexp-alist)
        `(("^ *\\([^:(\t\n]+\\):\\([0-9]+\\):\\([0-9]+\\):" 1 2 3)))
   (compilation-setup t)
@@ -391,6 +414,7 @@ using start-geiser, a procedure in the geiser/server module."
           (geiser-eval--send/result '(:eval (image-cache) geiser/user)))))
 
 (defun geiser-racket--image-cache-dir ()
+  "Return the directory to use to cache images."
   (or geiser-image-cache-dir geiser-racket--image-cache-dir))
 
 
@@ -399,6 +423,7 @@ using start-geiser, a procedure in the geiser/server module."
 (defvar geiser-racket--submodule-history ())
 
 (defun geiser-racket--submodule-form (name)
+  "Format a string denoting a submodule with the given NAME."
   (format "module[+*]? %s"
           (cond ((eq 1 name) "")
                 ((numberp name)
@@ -410,14 +435,14 @@ using start-geiser, a procedure in the geiser/server module."
 (defun geiser-racket-toggle-submodules (&optional name)
   "Toggle visibility of submodule forms.
 
-Use a prefix to be asked for a submodule name."
+Use a prefix to be asked for a submodule NAME."
   (interactive "p")
   (geiser-edit--toggle-visibility (geiser-racket--submodule-form name)))
 
 (defun geiser-racket-show-submodules (&optional name)
-  "Unconditionally shows all submodule forms.
+  "Unconditionally show all submodule forms.
 
-Use a prefix to be asked for a submodule name."
+Use a prefix to be asked for a submodule NAME."
   (interactive "p")
   (cond ((eq 1 name) (geiser-edit--show-all))
         (t (geiser-edit--show (geiser-racket--submodule-form name)))))
@@ -425,7 +450,7 @@ Use a prefix to be asked for a submodule name."
 (defun geiser-racket-hide-submodules (&optional name)
   "Unconditionally hides all visible submodules.
 
-Use a prefix to be asked for a submodule name."
+Use a prefix to be asked for a submodule NAME."
   (interactive "p")
   (geiser-edit--hide (geiser-racket--submodule-form name)))
 
@@ -458,20 +483,7 @@ Use a prefix to be asked for a submodule name."
 
 (geiser-impl--add-to-alist 'regexp "\\.ss\\'" 'racket t)
 (geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?\\'" 'racket t)
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . scheme-mode))
 
-;;;###autoload
-(defun run-gracket ()
-  "Start the Racket REPL using gracket instead of plain racket."
-  (interactive)
-  (let ((geiser-racket-use-gracket-p t))
-    (run-racket)))
-
-;;;###autoload
-(autoload 'run-racket "geiser-racket" "Start a Geiser Racket REPL." t)
-
-;;;###autoload
-(autoload 'switch-to-racket "geiser-racket"
-  "Start a Geiser Racket REPL, or switch to a running one." t)
-
-
 (provide 'geiser-racket)
+;;; geiser-racket.el ends here

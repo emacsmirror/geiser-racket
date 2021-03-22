@@ -1,0 +1,9 @@
+* Racket and Geiser talk to each other
+
+This package provides support for using [[http://racket-lang.org][Racket]] in Emacs with [[http://geiser.nongnu.org][Geiser]].
+
+The easiest way to install ~geiser-racket~ is from MELPA, using ~M-x
+package-install RET geiser-racket~.
+
+Files with the `.rkt` and `.ssl` extensions should be automatically
+recognized as racket-flavoured geiser buffers.
