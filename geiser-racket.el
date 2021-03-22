@@ -1,4 +1,4 @@
-;;; geiser-racket.el --- Spport for Racket in Geiser  -*- lexical-binding: t; -*-
+;;; geiser-racket.el --- Support for Racket in Geiser  -*- lexical-binding: t; -*-
 
 ;; Author: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
