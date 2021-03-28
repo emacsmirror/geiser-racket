@@ -203,8 +203,8 @@ using start-geiser, a procedure in the geiser/server module."
         ((stringp module) (make-symbol module))
         (t nil)))
 
-(defun geiser-racket--symbol-begin (module)
-  "Position of the beginning of MODULE's declaration."
+(defun geiser-racket--symbol-begin (_module)
+  "Position of the beginning of a symbol."
   (save-excursion (skip-syntax-backward "^'-()>") (point)))
 
 (defun geiser-racket--import-command (module)
@@ -267,8 +267,8 @@ using start-geiser, a procedure in the geiser/server module."
     (while (re-search-forward geiser-racket--geiser-file-rx nil t)
       (kill-whole-line))))
 
-(defun geiser-racket--display-error (module key msg)
-  "Display an error returned from an evaluation with the given MODULE, KEY and MSG."
+(defun geiser-racket--display-error (_module key msg)
+  "Display an error returned from an evaluation with the given KEY and MSG."
   (when key
     (insert "Error: ")
     (geiser-doc--insert-button key nil 'racket)
@@ -402,8 +402,8 @@ using start-geiser, a procedure in the geiser/server module."
 
 (defvar geiser-racket--image-cache-dir nil)
 
-(defun geiser-racket--startup (remote)
-  "Start the Racket REPL, which is perhaps REMOTE."
+(defun geiser-racket--startup (_remote)
+  "Start the Racket REPL."
   (set (make-local-variable 'compilation-error-regexp-alist)
        `(("^ *\\([^:(\t\n]+\\):\\([0-9]+\\):\\([0-9]+\\):" 1 2 3)))
   (compilation-setup t)
