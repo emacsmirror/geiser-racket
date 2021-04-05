@@ -19,6 +19,7 @@
 
 ;;; Code:
 
+(require 'geiser-impl)
 (require 'geiser-edit)
 (require 'geiser-doc)
 (require 'geiser-eval)
@@ -482,8 +483,18 @@ Use a prefix to be asked for a submodule NAME."
   (binding-forms* geiser-racket--binding-forms*))
 
 (geiser-impl--add-to-alist 'regexp "\\.ss\\'" 'racket t)
+
+;;;###autoload
+(geiser-activate-implementation 'racket)
+
+;;;###autoload
 (geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?\\'" 'racket t)
+
+;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.rkt\\'" . scheme-mode))
+
+;;;###autoload
+(autoload 'run-racket "geiser-racket" "Start a Geiser Racket REPL." t)
 
 (provide 'geiser-racket)
 ;;; geiser-racket.el ends here
