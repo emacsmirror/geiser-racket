@@ -4,9 +4,9 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, racket, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/racket
-;; Package-Requires: ((emacs "26.1") (geiser "0.12"))
+;; Package-Requires: ((emacs "26.1") (geiser "0.16"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 1.0
+;; Version: 0.16
 
 ;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2020, 2021 Jose Antonio Ortega Ruiz
 
@@ -482,13 +482,13 @@ Use a prefix to be asked for a submodule NAME."
   (binding-forms geiser-racket--binding-forms)
   (binding-forms* geiser-racket--binding-forms*))
 
-(geiser-impl--add-to-alist 'regexp "\\.ss\\'" 'racket t)
+(geiser-implementation-extension 'racket "ss\\'")
 
 ;;;###autoload
 (geiser-activate-implementation 'racket)
 
 ;;;###autoload
-(geiser-impl--add-to-alist 'regexp "\\.rkt[dl]?\\'" 'racket t)
+(geiser-implementation-extension 'racket "rkt[dl]?")
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.rkt\\'" . scheme-mode))
